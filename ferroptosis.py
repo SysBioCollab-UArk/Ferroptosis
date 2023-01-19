@@ -2,8 +2,15 @@ from pysb import *
 from pysb.simulator import ScipyOdeSimulator
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.constants import N_A, pi
 #test commit
 Model()
+
+#Volume
+Diameter = 15 #micrometers https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4079008/
+Volume = 4/3 * pi * (Diameter / 1e6 / 2)**3 #m^3
+
+
 
 #Metabolites
 Monomer("Glu_intra") #done
@@ -11,7 +18,6 @@ Monomer("Cystine_extra")
 Monomer("Glu_extra") #done
 Monomer("Cystine_intra")
 Monomer("Cys") #done
-Monomer("Glu") #done
 Monomer("Gly")
 Monomer("GSH") #done
 Monomer("GSSG") #done
@@ -41,35 +47,33 @@ Monomer("Erastin",["sys_xc"])
 Monomer("RSL3",["gpx4"])
 Monomer("Iron",["b"])
 
-Parameter("Glu_intra_0",100)
-Parameter("Cystine_extra_0",100)
-Parameter("System_Xc_0",10)
+Parameter("Glu_intra_0",0.1109/1e3 * Volume * N_A) #0.1109 is in mM
+Parameter("Cystine_extra_0",0.0009/1e3 * Volume * N_A * 1000) #0.0009 is in mM
+Parameter("System_Xc_0",50*42) #estimating 50 ppm times 42 million proteins/cell
 Parameter("Erastin_0",0)
-Parameter("RSL3_0",0)
-Parameter("GPX4_0",100)
-Parameter("Cys_0",100)
-Parameter("Trx_TrxR_0",100)
-Parameter("Iron_storage_0",100)
-Parameter("Iron_0",100)
-Parameter("Iron_chelators_0",100)
-Parameter("Ferrostatin_0",100)
-Parameter("LO_0",100)
-Parameter("Glu_0",100)
-Parameter("GCL_0",100)
-Parameter("Glu_Cys_GCL_Product_0",100)
-Parameter("LOOH_0",100)
-Parameter("Lipid_metab_0",100)
-Parameter("Gly_0",100)
-Parameter("GSS_0",100)
-Parameter("GSH_0",100)
-Parameter("GSSG_0",100)
-Parameter("NADPH_0",100)
-Parameter("GR_0",100)
-Parameter("NADPplus_0",100)
-Parameter("G6PD_0",100)
-Parameter("LOH_0",100)
-Parameter("PPARg_0",100)
-
+Parameter("RSL3_0",6e6) #2e6 real value
+Parameter("GPX4_0",0) # CHANGE THIS BACK5/1e3 * Volume * N_A) #5 is in mM
+Parameter("Cys_0",0)
+Parameter("Trx_TrxR_0",0)
+Parameter("Iron_storage_0",0)
+Parameter("Iron_0",0.61/1e6 * Volume * N_A) #0.61 is in micromolar
+Parameter("Iron_chelators_0",0)
+Parameter("Ferrostatin_0",0)
+Parameter("LO_0",0)
+Parameter("GCL_0",1918609200)
+Parameter("Glu_Cys_GCL_Product_0",0)
+Parameter("LOOH_0",532947)
+Parameter("Lipid_metab_0",1)
+Parameter("Gly_0",401805906)
+Parameter("GSS_0",15/1e3 * Volume * N_A) #15 is in mM
+Parameter("GSH_0",0)
+Parameter("GSSG_0",0)
+Parameter("NADPH_0",3197682)
+Parameter("GR_0",9593046)
+Parameter("NADPplus_0",0)
+Parameter("G6PD_0",19719039)
+Parameter("LOH_0",0)
+Parameter("PPARg_0",1*42) #estimating 1 ppm times 42 million proteins/cell
 
 Initial(Glu_intra(),Glu_intra_0)
 Initial(Cystine_extra(),Cystine_extra_0)
@@ -85,7 +89,6 @@ Initial(Iron_chelators(iron=None),Iron_chelators_0)
 Initial(Ferrostatin(lo=None),Ferrostatin_0)
 Initial(PPARg(),PPARg_0)
 Initial(LO(ferrostatin=None),LO_0)
-Initial(Glu(),Glu_0)
 Initial(GCL(),GCL_0)
 Initial(Glu_Cys_GCL_Product(),Glu_Cys_GCL_Product_0)
 Initial(LOOH(),LOOH_0)
@@ -105,12 +108,15 @@ Parameter("kf_Xc_Erastin",1)
 Parameter("kr_Xc_Erastin",1)
 
 Observable("LO_Obs",LO(ferrostatin=None))
-Observable("GSH_Obs",GSH())
-Observable("Cys_Obs",Cys())
+#Observable("GSH_Obs",GSH())
+#Observable("Cys_Obs",Cys())
 Observable("Cystine_extra_Obs",Cystine_extra())
-Observable("NADPH_Obs",NADPH())
+#Observable("NADPH_Obs",NA
+# DPH())
 Observable("LOOH_Obs",LOOH())
 Observable("LOH_Obs",LOH())
+Observable("Glu_Intra_Obs",Glu_intra())
+Observable("GPX_4_free",GPX4(rsl3=None))
 
 # Glu (intracellular) + Cystine (extracellular) + System Xc--> Glu (extracellular) + Cystine (intracellular) + System Xc-
 Rule("Glu_Cystine_Transport",Glu_intra() + Cystine_extra() + System_Xc(erastin=None) >>
@@ -144,10 +150,10 @@ Rule("Ferrostatin_LO",Ferrostatin(lo=None) + LO(ferrostatin=None) | Ferrostatin(
 
 # Glu + Cys + GCL -> Glu_Cys_GCL_Product + GCL
 Parameter("k_Glu_Cys_GCL",1)
-Rule("Glu_Cys_GCL",Glu() + Cys()+ GCL() >> Glu_Cys_GCL_Product() + GCL(),k_Glu_Cys_GCL)
+Rule("Glu_Cys_GCL",Glu_intra() + Cys()+ GCL() >> Glu_Cys_GCL_Product() + GCL(),k_Glu_Cys_GCL)
 
 # LOOH + Lipid_metab + Iron -> LO. + Iron
-Parameter("k_LOOH_Lipid_metab_Iron",1)
+Parameter("k_LOOH_Lipid_metab_Iron",1e12)
 Rule("LOOH_Lipid_metab_Iron",LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin=None) + Iron(b=None),k_LOOH_Lipid_metab_Iron)
 
 # Glu_Cys_GCL_Product + Gly + GSS -> GSH + GSS
@@ -182,16 +188,24 @@ Rule("NADPplus_NADPH",NADPplus() + G6PD() >> NADPH() + G6PD(),k_NADPplus_NADPH)
 
 
 
-Tspan=np.linspace(0,0.1,101)
+Tspan=np.linspace(0,10,1001)
 print(Tspan)
 sim=ScipyOdeSimulator(model,Tspan,verbose=True)
 result=sim.run()
 
-for obs in model.observables:
-    plt.plot(Tspan,result.observables[obs.name],lw=2,label=obs.name)
-plt.xlabel("Time")
-plt.ylabel("Concentration")
-plt.legend(loc="best")
+#obs2plot=["LOOH_Obs","LOH_Obs","LO_Obs"]
+obs2plot=["LO_Obs"]
+plt.title("RSL3 = %g" % RSL3_0.value)
+for obs_name in obs2plot:
 
-plt.tight_layout()
+    #model.observables:
+    #plt.figure()
+    maxconc=LOOH_0.value
+    #plt.plot(Tspan,result.observables[obs_name]/maxconc,lw=2,label=obs_name)
+    plt.plot(Tspan, result.observables[obs_name], lw=2, label=obs_name)
+    plt.xlabel("Time")
+    plt.ylabel("Concentration")
+    plt.legend(loc="best")
+
+    plt.tight_layout()
 plt.show()
