@@ -47,6 +47,7 @@ Monomer("Erastin",["sys_xc"])
 Monomer("RSL3",["gpx4"])
 Monomer("Iron",["b"])
 
+#Paramaters
 Parameter("Glu_intra_0",0.1109/1e3 * Volume * N_A) #0.1109 is in mM
 Parameter("Cystine_extra_0",0.0009/1e3 * Volume * N_A * 1000) #0.0009 is in mM
 Parameter("System_Xc_0",50*42) #estimating 50 ppm times 42 million proteins/cell
@@ -75,6 +76,7 @@ Parameter("G6PD_0",19719039)
 Parameter("LOH_0",0)
 Parameter("PPARg_0",1*42) #estimating 1 ppm times 42 million proteins/cell
 
+#Initials
 Initial(Glu_intra(),Glu_intra_0)
 Initial(Cystine_extra(),Cystine_extra_0)
 Initial(System_Xc(erastin=None),System_Xc_0)
@@ -103,13 +105,12 @@ Initial(NADPplus(),NADPplus_0)
 Initial(G6PD(),G6PD_0)
 Initial(LOH(),LOH_0)
 
-Parameter("k_Glu_Cystine",1)
-Parameter("kf_Xc_Erastin",1)
-Parameter("kr_Xc_Erastin",1)
 
+
+#Observables
 Observable("LO_Obs",LO(ferrostatin=None))
 #Observable("GSH_Obs",GSH())
-#Observable("Cys_Obs",Cys())
+Observable("Cys_Obs",Cys())
 Observable("Cystine_extra_Obs",Cystine_extra())
 #Observable("NADPH_Obs",NA
 # DPH())
@@ -117,12 +118,19 @@ Observable("LOOH_Obs",LOOH())
 Observable("LOH_Obs",LOH())
 Observable("Glu_Intra_Obs",Glu_intra())
 Observable("GPX_4_free",GPX4(rsl3=None))
+Observable("Gly_Obs",Gly())
+Observable("Glu_Cys_GCL_Product_Obs",Glu_Cys_GCL_Product())
 
+
+#Reactions
 # Glu (intracellular) + Cystine (extracellular) + System Xc--> Glu (extracellular) + Cystine (intracellular) + System Xc-
+Parameter("k_Glu_Cystine",1)
 Rule("Glu_Cystine_Transport",Glu_intra() + Cystine_extra() + System_Xc(erastin=None) >>
      Glu_extra() + Cystine_intra() + System_Xc(erastin=None), k_Glu_Cystine)
 
 # System Xc- + Erastin   <--> System Xc- : Erastin
+Parameter("kf_Xc_Erastin",1)
+Parameter("kr_Xc_Erastin",1)
 Rule("Xc_Erastin",System_Xc(erastin=None) + Erastin(sys_xc=None) | System_Xc(erastin=1) % Erastin(sys_xc=1),kf_Xc_Erastin,kr_Xc_Erastin)
 
 # Cystine (intracellular)  -> Cys
@@ -148,17 +156,34 @@ Parameter("kf_Ferrostatin_LO",1)
 Parameter("kr_Ferrostatin_LO",1)
 Rule("Ferrostatin_LO",Ferrostatin(lo=None) + LO(ferrostatin=None) | Ferrostatin(lo=1) % LO(ferrostatin=1),kf_Ferrostatin_LO,kr_Ferrostatin_LO)
 
+
+
+#To be deleted
+#Glu + Cys + GCL <-> Glu % Cys % GCL
+#Glu % Cys % GCL -> Glu_Cys_GCL_Product + GCL
+#Parameter("kf_Glu_Cys_GCL",1)
+#Parameter("kr_Glu_Cys_GCL",1)
+#Parameter("kcat_Glu_Cys_GCL",1)
+#Rule("Glu_Cys_GCL_bind",Glu_intra(gcl=None) + Cys(gcl=None) + GCL(glu=None,cys=None) |
+   #  Glu_intra(gcl=1) % Cys(gcl=2) % GCL(glu=1,cys=2),kf_Glu_Cys_GCL, kr_Glu_Cys_GCL)
+#Rule("Glu_Cys_GCL_cat",Glu_intra(gcl=1) % Cys(gcl=2) % GCL(glu=1,cys=2) >>
+    # Glu_Cys_GCL_Product() + GCL(glu=None,cys=None),kcat_Glu_Cys_GCL)
+
 # Glu + Cys + GCL -> Glu_Cys_GCL_Product + GCL
-Parameter("k_Glu_Cys_GCL",1)
-Rule("Glu_Cys_GCL",Glu_intra() + Cys()+ GCL() >> Glu_Cys_GCL_Product() + GCL(),k_Glu_Cys_GCL)
+Parameter("kcat_Glu_Cys_GCL",1)
+Parameter("km_Glu_Cys_GCL",100)
+Expression("keff_Glu_Cys_GCL",kcat_Glu_Cys_GCL / (km_Glu_Cys_GCL+Cys_Obs+Glu_Intra_Obs))
+Rule("Glu_Cys_GCL",Glu_intra() + Cys()+ GCL() >> Glu_Cys_GCL_Product() + GCL(),keff_Glu_Cys_GCL)
 
 # LOOH + Lipid_metab + Iron -> LO. + Iron
 Parameter("k_LOOH_Lipid_metab_Iron",1e12)
 Rule("LOOH_Lipid_metab_Iron",LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin=None) + Iron(b=None),k_LOOH_Lipid_metab_Iron)
 
 # Glu_Cys_GCL_Product + Gly + GSS -> GSH + GSS
-Parameter("k_Gly_Glu_Cys_GCL_Product",1)
-Rule("Gly_Glu_Cys_GCL_Product",Glu_Cys_GCL_Product() + Gly() + GSS() >> GSH() + GSS(),k_Gly_Glu_Cys_GCL_Product)
+Parameter("kcat_Gly_Glu_Cys_GCL_Product",1)
+Parameter("km_Gly_Glu_Cys_GCL_Product",100)
+Expression("keff_Gly_Glu_Cys_GCL_Product",kcat_Gly_Glu_Cys_GCL_Product / (km_Gly_Glu_Cys_GCL_Product+Gly_Obs+Glu_Cys_GCL_Product_Obs))
+Rule("Gly_Glu_Cys_GCL_Product",Glu_Cys_GCL_Product() + Gly() + GSS() >> GSH() + GSS(),keff_Gly_Glu_Cys_GCL_Product)
 
 # Example: LOOH + GSH + GPX4 -> LOH + GSSG + GPX4
 Parameter("k_LOOH_LOH",1)
