@@ -169,41 +169,52 @@ Rule("Ferrostatin_LO",Ferrostatin(lo=None) + LO(ferrostatin=None) | Ferrostatin(
 #Rule("Glu_Cys_GCL_cat",Glu_intra(gcl=1) % Cys(gcl=2) % GCL(glu=1,cys=2) >>
     # Glu_Cys_GCL_Product() + GCL(glu=None,cys=None),kcat_Glu_Cys_GCL)
 
-# Glu + Cys + GCL -> Glu_Cys_GCL_Product + GCL
+# Glu + Cys + GCL -> Glu_Cys_GCL_Product + GCL DONE
 Parameter("kcat_Glu_Cys_GCL",1)
 Parameter("km_Glu_Cys_GCL",100)
 Expression("keff_Glu_Cys_GCL",kcat_Glu_Cys_GCL / (km_Glu_Cys_GCL+Cys_Obs+Glu_Intra_Obs))
 Rule("Glu_Cys_GCL",Glu_intra() + Cys()+ GCL() >> Glu_Cys_GCL_Product() + GCL(),keff_Glu_Cys_GCL)
 
 # LOOH + Lipid_metab + Iron -> LO. + Iron
-Parameter("k_LOOH_Lipid_metab_Iron",1e12)
+Parameter("kcat_LOOH_Lipid_metab_Iron",1)
+Parameter("km_LOOH_Lipid_metab_Iron",100)
+Expression("keff_LOOH_Lipid_metab_Iron",kcat_LOOH_Lipid_metab_Iron / (km_LOOH_Lipid_metab_Iron+))
 Rule("LOOH_Lipid_metab_Iron",LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin=None) + Iron(b=None),k_LOOH_Lipid_metab_Iron)
 
-# Glu_Cys_GCL_Product + Gly + GSS -> GSH + GSS
+# Glu_Cys_GCL_Product + Gly + GSS -> GSH + GSS DONE
 Parameter("kcat_Gly_Glu_Cys_GCL_Product",1)
 Parameter("km_Gly_Glu_Cys_GCL_Product",100)
 Expression("keff_Gly_Glu_Cys_GCL_Product",kcat_Gly_Glu_Cys_GCL_Product / (km_Gly_Glu_Cys_GCL_Product+Gly_Obs+Glu_Cys_GCL_Product_Obs))
 Rule("Gly_Glu_Cys_GCL_Product",Glu_Cys_GCL_Product() + Gly() + GSS() >> GSH() + GSS(),keff_Gly_Glu_Cys_GCL_Product)
 
 # Example: LOOH + GSH + GPX4 -> LOH + GSSG + GPX4
-Parameter("k_LOOH_LOH",1)
+Parameter("kcat_LOOH_LOH",1)
+Parameter("km_LOOH_LOH",100)
+Expression("keff_LOOH_LOH",
 Rule("LOOH_LOH",LOOH() + GSH() + GPX4(rsl3=None) >> LOH() + GSSG() + GPX4(rsl3=None),k_LOOH_LOH)
 
 # RSL3 + GPX4 <--> RSL3:GPX4
-Parameter("kf_RSL3_GPX4",1)
-Parameter("kr_RSL3_GPX4",1)
+Parameter("kcat_RSL3_GPX4",1)
+Parameter("km_RSL3_GPX4",100)
+Expression("keff_RSL3_GPX4",
 Rule("RSL3_GPX4",RSL3(gpx4=None) + GPX4(rsl3=None) | RSL3(gpx4=1) % GPX4(rsl3=1),kf_RSL3_GPX4,kr_RSL3_GPX4)
 
 # PPARG -> PPARG + Lipid Metabolism
-Parameter("k_PPARG_Lipid_Metab",1)
+Parameter("kcat_PPARG_Lipid_Metab",1)
+Parameter("km_PPARG_Lipid_Metab",100)
+Expression("keff_PPARG_Lipid_Metab",
 Rule("PPARG_Lipid_metab",PPARg() >> PPARg() + Lipid_metab(),k_PPARG_Lipid_Metab)
 
 # Example 2: GSSG + NADPH + GR -> GSH + NADP+ + GR
-Parameter("k_GSSG_GSH",1)
+Parameter("kcat_GSSG_GSH",1)
+Parameter("km_GSSG_GSH",100)
+Expression("keff_GSSG_GSH",
 Rule("GSSG_GSH",GSSG() + NADPH() + GR() >> GSH() + NADPplus() + GR(),k_GSSG_GSH)
 
 # Example 3: NADP+ + G6PD -> NADPH + G6PD (only if one compound is required for reaction to occur)
-Parameter("k_NADPplus_NADPH",1)
+Parameter("kcat_NADPplus_NADPH",1)
+Parameter("km_NADPplus_NADPH",100)
+Expression("keff_NADPplus_NADPH",
 Rule("NADPplus_NADPH",NADPplus() + G6PD() >> NADPH() + G6PD(),k_NADPplus_NADPH)
 
 
