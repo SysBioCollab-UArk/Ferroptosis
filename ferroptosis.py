@@ -109,24 +109,30 @@ Initial(LOH(),LOH_0)
 
 #Observables
 Observable("LO_Obs",LO(ferrostatin=None))
-#Observable("GSH_Obs",GSH())
+Observable("GSH_Obs",GSH())
 Observable("Cys_Obs",Cys())
 Observable("Cystine_extra_Obs",Cystine_extra())
-#Observable("NADPH_Obs",NA
-# DPH())
+Observable("NADPplus_Obs",NADPplus())
 Observable("LOOH_Obs",LOOH())
 Observable("LOH_Obs",LOH())
 Observable("Glu_Intra_Obs",Glu_intra())
 Observable("GPX_4_free",GPX4(rsl3=None))
 Observable("Gly_Obs",Gly())
 Observable("Glu_Cys_GCL_Product_Obs",Glu_Cys_GCL_Product())
+Observable("Lipid_metab_Obs",Lipid_metab())
+Observable("GSSG_Obs",GSSG())
+Observable("NADPH_Obs",NADPH())
+
+
 
 
 #Reactions
 # Glu (intracellular) + Cystine (extracellular) + System Xc--> Glu (extracellular) + Cystine (intracellular) + System Xc-
-Parameter("k_Glu_Cystine",1)
-Rule("Glu_Cystine_Transport",Glu_intra() + Cystine_extra() + System_Xc(erastin=None) >>
-     Glu_extra() + Cystine_intra() + System_Xc(erastin=None), k_Glu_Cystine)
+
+Parameter("kcat_Glu_Cystine",1)
+Parameter("km_Glu_Cystine",100)
+Expression("keff_Glu_Cystine",kcat_Glu_Cystine / (km_Glu_Cystine+Glu_Intra_Obs+Cystine_extra_Obs))
+Rule("Glu_Cystine_Transport",Glu_intra() + Cystine_extra() + System_Xc(erastin=None) >> Glu_extra() + Cystine_intra() + System_Xc(erastin=None), keff_Glu_Cystine)
 
 # System Xc- + Erastin   <--> System Xc- : Erastin
 Parameter("kf_Xc_Erastin",1)
@@ -138,8 +144,11 @@ Parameter("k_Cystine_intra",1)
 Rule("Cystine_intra_to_cys",Cystine_intra() >> Cys(),k_Cystine_intra)
 
 # Cys  + Trx/TrxR -> ? + Trx/TrxR
-Parameter("k_Cys_TrxR",1)
-Rule("Cys_TrxR",Cys() + Trx_TrxR() >> Trx_TrxR(),k_Cys_TrxR)
+
+Parameter("kcat_Cys_TrxR",1)
+Parameter("km_Cys_TrxR",100)
+Expression("keff_Cys_TrxR",kcat_Cys_TrxR / (km_Cys_TrxR+Cys_Obs))
+Rule("Cys_TrxR",Cys() + Trx_TrxR() >> Trx_TrxR(),keff_Cys_TrxR)
 
 # Iron storage & trafficking heme metabolism + Iron <--> Iron storage & trafficking heme metabolism : Iron
 Parameter("kf_Storage",1)
@@ -156,19 +165,6 @@ Parameter("kf_Ferrostatin_LO",1)
 Parameter("kr_Ferrostatin_LO",1)
 Rule("Ferrostatin_LO",Ferrostatin(lo=None) + LO(ferrostatin=None) | Ferrostatin(lo=1) % LO(ferrostatin=1),kf_Ferrostatin_LO,kr_Ferrostatin_LO)
 
-
-
-#To be deleted
-#Glu + Cys + GCL <-> Glu % Cys % GCL
-#Glu % Cys % GCL -> Glu_Cys_GCL_Product + GCL
-#Parameter("kf_Glu_Cys_GCL",1)
-#Parameter("kr_Glu_Cys_GCL",1)
-#Parameter("kcat_Glu_Cys_GCL",1)
-#Rule("Glu_Cys_GCL_bind",Glu_intra(gcl=None) + Cys(gcl=None) + GCL(glu=None,cys=None) |
-   #  Glu_intra(gcl=1) % Cys(gcl=2) % GCL(glu=1,cys=2),kf_Glu_Cys_GCL, kr_Glu_Cys_GCL)
-#Rule("Glu_Cys_GCL_cat",Glu_intra(gcl=1) % Cys(gcl=2) % GCL(glu=1,cys=2) >>
-    # Glu_Cys_GCL_Product() + GCL(glu=None,cys=None),kcat_Glu_Cys_GCL)
-
 # Glu + Cys + GCL -> Glu_Cys_GCL_Product + GCL DONE
 Parameter("kcat_Glu_Cys_GCL",1)
 Parameter("km_Glu_Cys_GCL",100)
@@ -176,10 +172,10 @@ Expression("keff_Glu_Cys_GCL",kcat_Glu_Cys_GCL / (km_Glu_Cys_GCL+Cys_Obs+Glu_Int
 Rule("Glu_Cys_GCL",Glu_intra() + Cys()+ GCL() >> Glu_Cys_GCL_Product() + GCL(),keff_Glu_Cys_GCL)
 
 # LOOH + Lipid_metab + Iron -> LO. + Iron
-Parameter("kcat_LOOH_Lipid_metab_Iron",1)
-Parameter("km_LOOH_Lipid_metab_Iron",100)
-Expression("keff_LOOH_Lipid_metab_Iron",kcat_LOOH_Lipid_metab_Iron / (km_LOOH_Lipid_metab_Iron+))
-Rule("LOOH_Lipid_metab_Iron",LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin=None) + Iron(b=None),k_LOOH_Lipid_metab_Iron)
+Parameter("kcat_LOOH_Lipid_metab",1)
+Parameter("km_LOOH_Lipid_metab",100)
+Expression("keff_LOOH_Lipid_metab",kcat_LOOH_Lipid_metab / (km_LOOH_Lipid_metab + LOOH_Obs + Lipid_metab_Obs))
+Rule("LOOH_Lipid_metab",LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin=None) + Iron(b=None),keff_LOOH_Lipid_metab)
 
 # Glu_Cys_GCL_Product + Gly + GSS -> GSH + GSS DONE
 Parameter("kcat_Gly_Glu_Cys_GCL_Product",1)
@@ -188,34 +184,31 @@ Expression("keff_Gly_Glu_Cys_GCL_Product",kcat_Gly_Glu_Cys_GCL_Product / (km_Gly
 Rule("Gly_Glu_Cys_GCL_Product",Glu_Cys_GCL_Product() + Gly() + GSS() >> GSH() + GSS(),keff_Gly_Glu_Cys_GCL_Product)
 
 # Example: LOOH + GSH + GPX4 -> LOH + GSSG + GPX4
-Parameter("kcat_LOOH_LOH",1)
-Parameter("km_LOOH_LOH",100)
-Expression("keff_LOOH_LOH",
-Rule("LOOH_LOH",LOOH() + GSH() + GPX4(rsl3=None) >> LOH() + GSSG() + GPX4(rsl3=None),k_LOOH_LOH)
+Parameter("kcat_LOOH_GSH",1)
+Parameter("km_LOOH_GSH",100)
+Expression("keff_LOOH_GSH", kcat_LOOH_GSH / (km_LOOH_GSH + LOOH_Obs + GSH_Obs))
+Rule("LOOH_LOH",LOOH() + GSH() + GPX4(rsl3=None) >> LOH() + GSSG() + GPX4(rsl3=None),keff_LOOH_GSH)
 
 # RSL3 + GPX4 <--> RSL3:GPX4
-Parameter("kcat_RSL3_GPX4",1)
-Parameter("km_RSL3_GPX4",100)
-Expression("keff_RSL3_GPX4",
-Rule("RSL3_GPX4",RSL3(gpx4=None) + GPX4(rsl3=None) | RSL3(gpx4=1) % GPX4(rsl3=1),kf_RSL3_GPX4,kr_RSL3_GPX4)
+Parameter("kf_RSL3_GPX4",1)
+Parameter("kr_RSL3_GPX4",100)
+Rule("RSL3_binds_GPX4",RSL3(gpx4=None) + GPX4(rsl3=None) | RSL3(gpx4=1) % GPX4(rsl3=1),kf_RSL3_GPX4,kr_RSL3_GPX4)
 
 # PPARG -> PPARG + Lipid Metabolism
-Parameter("kcat_PPARG_Lipid_Metab",1)
-Parameter("km_PPARG_Lipid_Metab",100)
-Expression("keff_PPARG_Lipid_Metab",
+Parameter("k_PPARG_Lipid_Metab",1)
 Rule("PPARG_Lipid_metab",PPARg() >> PPARg() + Lipid_metab(),k_PPARG_Lipid_Metab)
 
-# Example 2: GSSG + NADPH + GR -> GSH + NADP+ + GR
-Parameter("kcat_GSSG_GSH",1)
-Parameter("km_GSSG_GSH",100)
-Expression("keff_GSSG_GSH",
-Rule("GSSG_GSH",GSSG() + NADPH() + GR() >> GSH() + NADPplus() + GR(),k_GSSG_GSH)
+# Example 2: GSSG + NADPH + GR -> GSH + NADP + GR
+Parameter("kcat_GSSG_NADPH",1)
+Parameter("km_GSSG_NADPH",100)
+Expression("keff_GSSG_NADPH", kcat_GSSG_NADPH / (km_GSSG_NADPH + GSSG_Obs + NADPH_Obs))
+Rule("GSSG_GSH_NADPH",GSSG() + NADPH() + GR() >> GSH() + NADPplus() + GR(),keff_GSSG_NADPH)
 
 # Example 3: NADP+ + G6PD -> NADPH + G6PD (only if one compound is required for reaction to occur)
 Parameter("kcat_NADPplus_NADPH",1)
 Parameter("km_NADPplus_NADPH",100)
-Expression("keff_NADPplus_NADPH",
-Rule("NADPplus_NADPH",NADPplus() + G6PD() >> NADPH() + G6PD(),k_NADPplus_NADPH)
+Expression("keff_NADPplus_NADPH",kcat_NADPplus_NADPH / (km_NADPplus_NADPH + NADPplus_Obs))
+Rule("NADPplus_NADPH",NADPplus() + G6PD() >> NADPH() + G6PD(),keff_NADPplus_NADPH)
 
 
 
