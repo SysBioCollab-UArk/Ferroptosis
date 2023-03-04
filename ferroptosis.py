@@ -76,6 +76,8 @@ Parameter("G6PD_0",19719039)
 Parameter("LOH_0",0)
 Parameter("PPARg_0",1*42) #estimating 1 ppm times 42 million proteins/cell
 
+
+
 #Initials
 Initial(Glu_intra(),Glu_intra_0)
 Initial(Cystine_extra(),Cystine_extra_0)
@@ -112,10 +114,12 @@ Observable("LO_Obs",LO(ferrostatin=None))
 Observable("GSH_Obs",GSH())
 Observable("Cys_Obs",Cys())
 Observable("Cystine_extra_Obs",Cystine_extra())
+Observable("Cystine_intra_Obs",Cystine_intra())
 Observable("NADPplus_Obs",NADPplus())
 Observable("LOOH_Obs",LOOH())
 Observable("LOH_Obs",LOH())
-Observable("Glu_Intra_Obs",Glu_intra())
+Observable("Glu_intra_Obs",Glu_intra())
+Observable("Glu_extra_Obs",Glu_extra())
 Observable("GPX_4_free",GPX4(rsl3=None))
 Observable("Gly_Obs",Gly())
 Observable("Glu_Cys_GCL_Product_Obs",Glu_Cys_GCL_Product())
@@ -130,8 +134,8 @@ Observable("NADPH_Obs",NADPH())
 # Glu (intracellular) + Cystine (extracellular) + System Xc--> Glu (extracellular) + Cystine (intracellular) + System Xc-
 
 Parameter("kcat_Glu_Cystine",1)
-Parameter("km_Glu_Cystine",100)
-Expression("keff_Glu_Cystine",kcat_Glu_Cystine / (km_Glu_Cystine+Glu_Intra_Obs+Cystine_extra_Obs))
+Parameter("km_Glu_Cystine",1e7)
+Expression("keff_Glu_Cystine",kcat_Glu_Cystine / (km_Glu_Cystine+Glu_intra_Obs+Cystine_extra_Obs))
 Rule("Glu_Cystine_Transport",Glu_intra() + Cystine_extra() + System_Xc(erastin=None) >> Glu_extra() + Cystine_intra() + System_Xc(erastin=None), keff_Glu_Cystine)
 
 # System Xc- + Erastin   <--> System Xc- : Erastin
@@ -168,7 +172,7 @@ Rule("Ferrostatin_LO",Ferrostatin(lo=None) + LO(ferrostatin=None) | Ferrostatin(
 # Glu + Cys + GCL -> Glu_Cys_GCL_Product + GCL DONE
 Parameter("kcat_Glu_Cys_GCL",1)
 Parameter("km_Glu_Cys_GCL",100)
-Expression("keff_Glu_Cys_GCL",kcat_Glu_Cys_GCL / (km_Glu_Cys_GCL+Cys_Obs+Glu_Intra_Obs))
+Expression("keff_Glu_Cys_GCL",kcat_Glu_Cys_GCL / (km_Glu_Cys_GCL+Cys_Obs+Glu_intra_Obs))
 Rule("Glu_Cys_GCL",Glu_intra() + Cys()+ GCL() >> Glu_Cys_GCL_Product() + GCL(),keff_Glu_Cys_GCL)
 
 # LOOH + Lipid_metab + Iron -> LO. + Iron
@@ -219,22 +223,52 @@ Rule("NADPplus_NADPH",NADPplus() + G6PD() >> NADPH() + G6PD(),keff_NADPplus_NADP
 
 Tspan=np.linspace(0,10,1001)
 print(Tspan)
-sim=ScipyOdeSimulator(model,Tspan,verbose=True)
-result=sim.run()
 
-#obs2plot=["LOOH_Obs","LOH_Obs","LO_Obs"]
-obs2plot=["LO_Obs"]
-plt.title("RSL3 = %g" % RSL3_0.value)
-for obs_name in obs2plot:
+for km in [1e7,1e8]:
+    sim=ScipyOdeSimulator(model,Tspan,verbose=True)
+    result=sim.run(param_values={"km_Glu_Cystine": km})
 
-    #model.observables:
-    #plt.figure()
-    maxconc=LOOH_0.value
-    #plt.plot(Tspan,result.observables[obs_name]/maxconc,lw=2,label=obs_name)
-    plt.plot(Tspan, result.observables[obs_name], lw=2, label=obs_name)
-    plt.xlabel("Time")
-    plt.ylabel("Concentration")
-    plt.legend(loc="best")
+    #obs2plot=["LOOH_Obs","LOH_Obs","LO_Obs"]
+    obs2plot=[["LO_Obs"],
+              ["LOOH_Obs","LOH_Obs"],
+              ["GSH_Obs","GSSG_Obs"],
+              ["NADPplus_Obs","NADPH_Obs"],
+              ["Cystine_extra_Obs","Cystine_intra_Obs","Cys_Obs"],
+              ["Glu_intra_Obs","Glu_extra_Obs"]]
 
-    plt.tight_layout()
+    fig,axs=plt.subplots(nrows=3,ncols=2,sharex=True,figsize=(9.6,9.6))
+    fig.suptitle("km_Glu_Cystine = %g" % km, fontsize=15)
+
+    #use this code for plotting multiple km values
+    #fig.suptitle("km_Glu_Cystine = %g,\n km_Glu_Cystine = %g,\n km_Glu_Cystine = %g" %
+                 #(km_Glu_Cystine.value,km_Glu_Cystine.value,km_Glu_Cystine.value), fontsize=15)
+
+    row=0
+    col=0
+    for obs_group in obs2plot:
+        #plt.figure()
+        for obs_name in obs_group:
+            #model.observables:
+            #plt.figure()
+            maxconc=LOOH_0.value
+            #plt.plot(Tspan,result.observables[obs_name]/maxconc,lw=2,label=obs_name)
+            axs[row,col].plot(Tspan, result.observables[obs_name], lw=2, label=obs_name)
+            if row == 2:
+                axs[row,col].set_xlabel("Time")
+            axs[row,col].set_ylabel("Concentration")
+            axs[row,col].legend(loc="best")
+
+        if (col+1) % 2 == 0:
+            row += 1
+            col = 0
+        else:
+            col += 1
+
+            plt.tight_layout()
+    plt.savefig("km_Glu_Cys_%g.pdf" % km,format="pdf")
+
+#Use this code if planning to save files with multiple km changes
+#plt.savefig("km_1_%g,km_2_%g,km_3_%g.pdf" % (km_1,km_2,km_3),format="pdf")
 plt.show()
+
+
