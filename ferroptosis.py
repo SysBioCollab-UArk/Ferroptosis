@@ -53,7 +53,7 @@ Parameter("Cystine_extra_0",0.0009/1e3 * Volume * N_A * 1000) #0.0009 is in mM
 Parameter("System_Xc_0",50*42) #estimating 50 ppm times 42 million proteins/cell
 Parameter("Erastin_0",0)
 Parameter("RSL3_0",6e6) #2e6 real value
-Parameter("GPX4_0",0) # CHANGE THIS BACK5/1e3 * Volume * N_A) #5 is in mM
+Parameter("GPX4_0",2e6) # CHANGE THIS BACK5/1e3 * Volume * N_A) #5 is in mM
 Parameter("Cys_0",0)
 Parameter("Trx_TrxR_0",0)
 Parameter("Iron_storage_0",0)
@@ -67,8 +67,8 @@ Parameter("LOOH_0",532947)
 Parameter("Lipid_metab_0",1)
 Parameter("Gly_0",401805906)
 Parameter("GSS_0",15/1e3 * Volume * N_A) #15 is in mM
-Parameter("GSH_0",0)
-Parameter("GSSG_0",0)
+Parameter("GSH_0",1e5)
+Parameter("GSSG_0",1e5)
 Parameter("NADPH_0",3197682)
 Parameter("GR_0",9593046)
 Parameter("NADPplus_0",0)
@@ -133,7 +133,15 @@ Observable("NADPH_Obs",NADPH())
 #Reactions
 # Glu (intracellular) + Cystine (extracellular) + System Xc--> Glu (extracellular) + Cystine (intracellular) + System Xc-
 
-Parameter("kcat_Glu_Cystine",1)
+#New Rule
+Parameter("k_Glu_intra",1e5)
+Rule("Glu_Intra_Synthesis",None >> Glu_intra(),k_Glu_intra)
+
+#New Rule
+Parameter("k_Cystine_extra",1e5)
+Rule("Cystine_Extra_Synthesis",None >> Cystine_extra(),k_Cystine_extra)
+
+Parameter("kcat_Glu_Cystine",1e-3)
 Parameter("km_Glu_Cystine",1e7)
 Expression("keff_Glu_Cystine",kcat_Glu_Cystine / (km_Glu_Cystine+Glu_intra_Obs+Cystine_extra_Obs))
 Rule("Glu_Cystine_Transport",Glu_intra() + Cystine_extra() + System_Xc(erastin=None) >> Glu_extra() + Cystine_intra() + System_Xc(erastin=None), keff_Glu_Cystine)
@@ -148,7 +156,6 @@ Parameter("k_Cystine_intra",1)
 Rule("Cystine_intra_to_cys",Cystine_intra() >> Cys(),k_Cystine_intra)
 
 # Cys  + Trx/TrxR -> ? + Trx/TrxR
-
 Parameter("kcat_Cys_TrxR",1)
 Parameter("km_Cys_TrxR",100)
 Expression("keff_Cys_TrxR",kcat_Cys_TrxR / (km_Cys_TrxR+Cys_Obs))
@@ -171,12 +178,12 @@ Rule("Ferrostatin_LO",Ferrostatin(lo=None) + LO(ferrostatin=None) | Ferrostatin(
 
 # Glu + Cys + GCL -> Glu_Cys_GCL_Product + GCL DONE
 Parameter("kcat_Glu_Cys_GCL",1)
-Parameter("km_Glu_Cys_GCL",100)
+Parameter("km_Glu_Cys_GCL",1e7) #100
 Expression("keff_Glu_Cys_GCL",kcat_Glu_Cys_GCL / (km_Glu_Cys_GCL+Cys_Obs+Glu_intra_Obs))
 Rule("Glu_Cys_GCL",Glu_intra() + Cys()+ GCL() >> Glu_Cys_GCL_Product() + GCL(),keff_Glu_Cys_GCL)
 
 # LOOH + Lipid_metab + Iron -> LO. + Iron
-Parameter("kcat_LOOH_Lipid_metab",1)
+Parameter("kcat_LOOH_Lipid_metab",0.001)
 Parameter("km_LOOH_Lipid_metab",100)
 Expression("keff_LOOH_Lipid_metab",kcat_LOOH_Lipid_metab / (km_LOOH_Lipid_metab + LOOH_Obs + Lipid_metab_Obs))
 Rule("LOOH_Lipid_metab",LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin=None) + Iron(b=None),keff_LOOH_Lipid_metab)
@@ -203,13 +210,13 @@ Parameter("k_PPARG_Lipid_Metab",1)
 Rule("PPARG_Lipid_metab",PPARg() >> PPARg() + Lipid_metab(),k_PPARG_Lipid_Metab)
 
 # Example 2: GSSG + NADPH + GR -> GSH + NADP + GR
-Parameter("kcat_GSSG_NADPH",1)
-Parameter("km_GSSG_NADPH",100)
+Parameter("kcat_GSSG_NADPH",0) #1e-3
+Parameter("km_GSSG_NADPH",0) #1e9
 Expression("keff_GSSG_NADPH", kcat_GSSG_NADPH / (km_GSSG_NADPH + GSSG_Obs + NADPH_Obs))
 Rule("GSSG_GSH_NADPH",GSSG() + NADPH() + GR() >> GSH() + NADPplus() + GR(),keff_GSSG_NADPH)
 
 # Example 3: NADP+ + G6PD -> NADPH + G6PD (only if one compound is required for reaction to occur)
-Parameter("kcat_NADPplus_NADPH",1)
+Parameter("kcat_NADPplus_NADPH",1e-3) #1
 Parameter("km_NADPplus_NADPH",100)
 Expression("keff_NADPplus_NADPH",kcat_NADPplus_NADPH / (km_NADPplus_NADPH + NADPplus_Obs))
 Rule("NADPplus_NADPH",NADPplus() + G6PD() >> NADPH() + G6PD(),keff_NADPplus_NADPH)
@@ -221,12 +228,12 @@ Rule("NADPplus_NADPH",NADPplus() + G6PD() >> NADPH() + G6PD(),keff_NADPplus_NADP
 
 
 
-Tspan=np.linspace(0,10,1001)
+Tspan=np.linspace(0,1000,10001)
 print(Tspan)
 
-for km in [1e7,1e8]:
+for km in [1e5,1e7,1e8,1e9]:
     sim=ScipyOdeSimulator(model,Tspan,verbose=True)
-    result=sim.run(param_values={"km_Glu_Cystine": km})
+    result=sim.run(param_values={"km_LOOH_GSH": km})
 
     #obs2plot=["LOOH_Obs","LOH_Obs","LO_Obs"]
     obs2plot=[["LO_Obs"],
@@ -234,10 +241,10 @@ for km in [1e7,1e8]:
               ["GSH_Obs","GSSG_Obs"],
               ["NADPplus_Obs","NADPH_Obs"],
               ["Cystine_extra_Obs","Cystine_intra_Obs","Cys_Obs"],
-              ["Glu_intra_Obs","Glu_extra_Obs"]]
+              ["Glu_intra_Obs"]]#,"Glu_extra_Obs"]]
 
     fig,axs=plt.subplots(nrows=3,ncols=2,sharex=True,figsize=(9.6,9.6))
-    fig.suptitle("km_Glu_Cystine = %g" % km, fontsize=15)
+    fig.suptitle("km_LOOH_GSH = %g" % km, fontsize=15)
 
     #use this code for plotting multiple km values
     #fig.suptitle("km_Glu_Cystine = %g,\n km_Glu_Cystine = %g,\n km_Glu_Cystine = %g" %
@@ -266,6 +273,8 @@ for km in [1e7,1e8]:
 
             plt.tight_layout()
     plt.savefig("km_Glu_Cys_%g.pdf" % km,format="pdf")
+
+
 
 #Use this code if planning to save files with multiple km changes
 #plt.savefig("km_1_%g,km_2_%g,km_3_%g.pdf" % (km_1,km_2,km_3),format="pdf")
