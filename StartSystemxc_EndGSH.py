@@ -5,47 +5,47 @@ import matplotlib.pyplot as plt
 
 Model()
 
-#Metabolites
-Monomer("Glu_intra") #done
+# Metabolites
+Monomer("Glu_intra")
 Monomer("Cystine_extra")
-Monomer("Glu_extra") #done
+Monomer("Glu_extra")
 Monomer("Cystine_intra")
-Monomer("Cys") #done
+Monomer("Cys")
 Monomer("Glu_Cys_GCL_Product")
 Monomer("Gly")
 Monomer("GSH")
 
-#Enzymes
-Monomer("System_Xc",["erastin"])
+# Enzymes
+Monomer("System_Xc", ["erastin"])
 Monomer("Trx_TrxR")
 Monomer("GCL")
 Monomer("GSS")
 
-#Observables
-Observable("Cys_Obs",Cys())
-Observable("Cystine_extra_Obs",Cystine_extra())
-Observable("Cystine_intra_Obs",Cystine_intra())
-Observable("Glu_intra_Obs",Glu_intra())
-Observable("Glu_extra_Obs",Glu_extra())
-Observable("Gly_Obs",Gly())
-Observable("GSH_Obs",GSH())
-Observable("Glu_Cys_GCL_Product_Obs",Glu_Cys_GCL_Product())
+# Observables
+Observable("Cys_Obs", Cys())
+Observable("Cystine_extra_Obs", Cystine_extra())
+Observable("Cystine_intra_Obs", Cystine_intra())
+Observable("Glu_intra_Obs", Glu_intra())
+Observable("Glu_extra_Obs", Glu_extra())
+Observable("Gly_Obs", Gly())
+Observable("GSH_Obs", GSH())
+Observable("Glu_Cys_GCL_Product_Obs", Glu_Cys_GCL_Product())
 
-#Parameters
-Parameter("System_Xc_0",100)
-Parameter("Trx_TrxR_0",100)
-Parameter("GCL_0",100)
-Parameter("GSS_0",100)
-Parameter("Gly_0",0)
+# Parameters
+Parameter("System_Xc_0", 100)
+Parameter("Trx_TrxR_0", 100)
+Parameter("GCL_0", 100)
+Parameter("GSS_0", 100)
+Parameter("Gly_0", 0)
 
-#Initials
-Initial(System_Xc(erastin=None),System_Xc_0)
-Initial(Trx_TrxR(),Trx_TrxR_0)
-Initial(GCL(),GCL_0)
-Initial(GSS(),GSS_0)
-Initial(Gly(),Gly_0)
+# Initials
+Initial(System_Xc(erastin=None), System_Xc_0)
+Initial(Trx_TrxR(), Trx_TrxR_0)
+Initial(GCL(), GCL_0)
+Initial(GSS(), GSS_0)
+Initial(Gly(), Gly_0)
 
-#Rules
+# Rules
 Parameter("k_Glu_intra",2e3) #1.95e5 originally
 Rule("Glu_Intra_Synthesis",None >> Glu_intra(),k_Glu_intra)
 
@@ -106,8 +106,6 @@ for km in [100]:
     #print(len(axs))
     #quit()
     fig.suptitle("km_LOOH_GSH = %g" % km, fontsize=15)
-
-
 
     row=0
     col=0
