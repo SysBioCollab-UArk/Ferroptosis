@@ -52,7 +52,7 @@ Monomer("Iron", ["b"])
 Parameter("System_Xc_0", 100)  # 50*42 - estimating 50 ppm times 42 million proteins/cell
 Parameter("Trx_TrxR_0", 100)  # originally 0
 Parameter("GCL_0", 100)  # origianlly 1918609200
-Parameter("GSS_0", 100)  # 15 is in mM, originally 15/1e3 * Volume * N_A
+Parameter("GSS_0", 250)  # 15 is in mM, originally 15/1e3 * Volume * N_A
 Parameter("Gly_0", 0)  # originally 401805906
 # parameters above included in StartSystemxc_EndGSH.py
 Parameter("GPX4_0", 2e6)  # CHANGE THIS BACK5/1e3 * Volume * N_A) #5 is in mM
@@ -73,10 +73,10 @@ Parameter("Glu_Cys_GCL_Product_0", 0)
 Parameter("Lipid_metab_0", 0)  # 1) todo
 Parameter("GSH_0", 0)  # 1e5)
 Parameter("GSSG_0", 0)  # 1e3)  # originally 1e5, changed to fix scale of Gly,GSH,GSSG graph todo
-Parameter("NADPH_0", 0)  # 3197682) todo
-Parameter("GR_0", 0)  # 9593046) todo
+Parameter("NADPH_0", 500)  # 3197682) todo
+Parameter("GR_0", 2e6)  # 9593046) todo -> 2e6
 Parameter("NADPplus_0", 0)
-Parameter("G6PD_0", 0)  # 19719039) todo
+Parameter("G6PD_0", 2e6)  # 19719039) todo -> 2e6
 
 Parameter("PPARg_0", 0)  # 1*42)  # estimating 1 ppm times 42 million proteins/cell
 
@@ -121,13 +121,15 @@ Observable("GSH_Obs", GSH())
 Observable("Glu_Cys_GCL_Product_Obs", Glu_Cys_GCL_Product())
 # observables above included in StartSystemxc_EndGSH.py
 Observable("LO_Obs", LO(ferrostatin=None))
-Observable("NADPplus_Obs", NADPplus())
 Observable("LOOH_Obs", LOOH())
 Observable("LOH_Obs", LOH())
 Observable("GPX_4_free", GPX4(rsl3=None))
 Observable("Lipid_metab_Obs", Lipid_metab())
 Observable("GSSG_Obs", GSSG())
 Observable("NADPH_Obs", NADPH())
+Observable("NADPplus_Obs", NADPplus())
+Observable("NADPtotal", NADPH()+NADPplus())
+
 
 # Rules
 # Glu (intracellular) + Cystine (extracellular) + System Xc-->
@@ -165,55 +167,52 @@ Parameter("kcat_Glu_Cys_GCL", 2e-7)
 Rule("Glu_Cys_GCL", Glu_intra() + Cys() + GCL() >> Glu_Cys_GCL_Product() + GCL(), kcat_Glu_Cys_GCL)
 
 # Glu_Cys_GCL_Product + Gly + GSS -> GSH + GSS
-Parameter("kcat_Gly_Glu_Cys_GCL_Product", 0.001)  # 2e-7
-Parameter("km_Gly_Glu_Cys_GCL_Product", 1e3)  # 100
+Parameter("kcat_Gly_Glu_Cys_GCL_Product", 7e-5)  # 2e-7, 1e-4
+Parameter("km_Gly_Glu_Cys_GCL_Product", 100)  # 100
 Expression("keff_Gly_Glu_Cys_GCL_Product",
            kcat_Gly_Glu_Cys_GCL_Product / (km_Gly_Glu_Cys_GCL_Product+Gly_Obs+Glu_Cys_GCL_Product_Obs))
 Rule("Gly_Glu_Cys_GCL_Product", Glu_Cys_GCL_Product() + Gly() + GSS() >> GSH() + GSS(), keff_Gly_Glu_Cys_GCL_Product)
 
-Parameter("k_Gly", 75)  # 100
+Parameter("k_Gly", 20)  # 100
 Rule("Gly_Synthesis", None >> Gly(), k_Gly)
-
-# Parameter("k_GSH_deg", 0.05)  # 100 # TODO: delete 284-285 once both models match
-# Rule("GSH_Degradation", GSH() >> None, k_GSH_deg)
 
 # TODO: rules above are included in StartSystemxc_EndGSH.py
 
 # LOOH + GSH + GPX4 -> LOH + GSSG + GPX4
-Parameter("kcat_LOOH_GSH", 1e6)  # 1
+Parameter("kcat_LOOH_GSH", 5e-7)  #todo originally  1.5e-6
 Parameter("km_LOOH_GSH", 100)  # 100
 Expression("keff_LOOH_GSH", kcat_LOOH_GSH / (km_LOOH_GSH + LOOH_Obs + GSH_Obs))
 Rule("LOOH_LOH", LOOH() + GSH() + GPX4(rsl3=None) >> LOH() + GSSG() + GPX4(rsl3=None), keff_LOOH_GSH)
 
 # LOOH synthesis
-Parameter('k_synth_LOOH', 100)
+Parameter('k_synth_LOOH', 130) #todo originally 100 -> 75
 Rule('synth_LOOH', None >> LOOH(), k_synth_LOOH)
 
 # LOH degradation
-Parameter('k_deg_LOH', 1)
+Parameter('k_deg_LOH', 0.08) #todo originally 1 -> 0.08
 Rule('deg_LOH', LOH() >> None, k_deg_LOH)
 
-# ######## TODO: Work on turning on the 4 rules above for our next meeting
+######### TODO: Work on turning on the 4 rules below for our next meeting
 
 # PPARG -> PPARG + Lipid Metabolism
 Parameter("k_PPARG_Lipid_Metab", 0)  # 1
 Rule("PPARG_Lipid_metab", PPARg() >> PPARg() + Lipid_metab(), k_PPARG_Lipid_Metab)
 
-# GSSG + NADPH + GR -> GSH + NADP + GR
-Parameter("kcat_GSSG_NADPH", 0)  # 1e-3)  # 1e-3 todo
-Parameter("km_GSSG_NADPH", 1e4)  # 1e9
+# GSSG + NADPH + GR -> GSH + NADP+ + GR
+Parameter("kcat_GSSG_NADPH", 5e-7)  # 5e-7 todo
+Parameter("km_GSSG_NADPH", 100)  # 1e9
 Expression("keff_GSSG_NADPH", kcat_GSSG_NADPH / (km_GSSG_NADPH + GSSG_Obs + NADPH_Obs))
 Rule("GSSG_GSH_NADPH", GSSG() + NADPH() + GR() >> GSH() + NADPplus() + GR(), keff_GSSG_NADPH)
 
 # NADP+ + G6PD -> NADPH + G6PD (only if one compound is required for reaction to occur)
-Parameter("kcat_NADPplus_NADPH", 0)  # 1e-3)  # 1e-3 todo
-Parameter("km_NADPplus_NADPH", 10000)  # 100
+Parameter("kcat_NADPplus_NADPH", 1e-4)  # 1e-3)  # 1e-3 todo
+Parameter("km_NADPplus_NADPH", 100)  # 100
 Expression("keff_NADPplus_NADPH", kcat_NADPplus_NADPH / (km_NADPplus_NADPH + NADPplus_Obs))
 Rule("NADPplus_NADPH", NADPplus() + G6PD() >> NADPH() + G6PD(), keff_NADPplus_NADPH)
 
 # LOOH + Lipid_metab + Iron -> LO. + Iron
 Parameter("kcat_LOOH_Lipid_metab", 0)  # 0.001
-Parameter("km_LOOH_Lipid_metab", 100)  # 100
+Parameter("km_LOOH_Lipid_metab", 1000)  # 100
 Expression("keff_LOOH_Lipid_metab", kcat_LOOH_Lipid_metab / (km_LOOH_Lipid_metab + LOOH_Obs + Lipid_metab_Obs))
 Rule("LOOH_Lipid_metab", LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin=None) + Iron(b=None),
      keff_LOOH_Lipid_metab)
@@ -260,8 +259,9 @@ for km in [100]:
 
     obs2plot = [["Cystine_extra_Obs", "Cystine_intra_Obs", "Cys_Obs"],
                 ["Glu_intra_Obs", "Glu_extra_Obs"],
-                ["Gly_Obs", "GSH_Obs"],
-                ["LOOH_Obs", "LOH_Obs"]]  # , "GSSG_Obs"]]
+                ["Gly_Obs","GSSG_Obs" ,"GSH_Obs"],
+                ["LOOH_Obs", "LOH_Obs"],
+                ["NADPH_Obs","NADPplus_Obs","NADPtotal"]]
     # obs2plot = [["Cystine_extra_Obs", "Cystine_intra_Obs", "Cys_Obs"],
     #             ["Glu_intra_Obs", "Glu_extra_Obs"],
     #             ["Gly_Obs", "GSH_Obs", "GSSG_Obs"],
