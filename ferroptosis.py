@@ -65,7 +65,7 @@ Parameter("Erastin_0", 0)
 Parameter("RSL3_0", 0)  # 6e6)  # 2e6 real value todo
 Parameter("Cys_0", 0)
 Parameter("Iron_storage_0", 0)
-Parameter("Iron_0", 0)  # 0.61/1e6 * Volume * N_A)  # 0.61 is in micromolar todo
+Parameter("Iron_0", 100)  # 0.61/1e6 * Volume * N_A)  # 0.61 is in micromolar todo
 Parameter("Iron_chelators_0", 0)
 Parameter("Ferrostatin_0", 0)
 Parameter("LO_0", 0)
@@ -129,6 +129,7 @@ Observable("GSSG_Obs", GSSG())
 Observable("NADPH_Obs", NADPH())
 Observable("NADPplus_Obs", NADPplus())
 Observable("NADPtotal", NADPH()+NADPplus())
+Observable("Irontotal", Iron())
 
 
 # Rules
@@ -184,9 +185,17 @@ Parameter("km_LOOH_GSH", 100)  # 100
 Expression("keff_LOOH_GSH", kcat_LOOH_GSH / (km_LOOH_GSH + LOOH_Obs + GSH_Obs))
 Rule("LOOH_LOH", LOOH() + GSH() + GPX4(rsl3=None) >> LOH() + GSSG() + GPX4(rsl3=None), keff_LOOH_GSH)
 
+# GSH degradation
+Parameter('k_deg_GSH', 0.05) #todo originally 1 -> 0.08
+Rule('deg_GSH', GSH() >> None, k_deg_GSH)
+
 # LOOH synthesis
-Parameter('k_synth_LOOH', 130) #todo originally 100 -> 75
+Parameter('k_synth_LOOH', 100) #todo originally 100 -> 75
 Rule('synth_LOOH', None >> LOOH(), k_synth_LOOH)
+
+# LOOH degradation
+Parameter('k_deg_LOOH', 0.05) #todo originally 1 -> 0.08
+Rule('deg_LOOH', LOOH() >> None, k_deg_LOOH)
 
 # LOH degradation
 Parameter('k_deg_LOH', 0.08) #todo originally 1 -> 0.08
@@ -195,7 +204,7 @@ Rule('deg_LOH', LOH() >> None, k_deg_LOH)
 ######### TODO: Work on turning on the 4 rules below for our next meeting
 
 # PPARG -> PPARG + Lipid Metabolism
-Parameter("k_PPARG_Lipid_Metab", 0)  # 1
+Parameter("k_PPARG_Lipid_Metab", 100)  # 1
 Rule("PPARG_Lipid_metab", PPARg() >> PPARg() + Lipid_metab(), k_PPARG_Lipid_Metab)
 
 # GSSG + NADPH + GR -> GSH + NADP+ + GR
@@ -211,41 +220,42 @@ Expression("keff_NADPplus_NADPH", kcat_NADPplus_NADPH / (km_NADPplus_NADPH + NAD
 Rule("NADPplus_NADPH", NADPplus() + G6PD() >> NADPH() + G6PD(), keff_NADPplus_NADPH)
 
 # LOOH + Lipid_metab + Iron -> LO. + Iron
-Parameter("kcat_LOOH_Lipid_metab", 0)  # 0.001
-Parameter("km_LOOH_Lipid_metab", 1000)  # 100
+Parameter("kcat_LOOH_Lipid_metab", 0)  # 1e3
+Parameter("km_LOOH_Lipid_metab", 100)  # 100
 Expression("keff_LOOH_Lipid_metab", kcat_LOOH_Lipid_metab / (km_LOOH_Lipid_metab + LOOH_Obs + Lipid_metab_Obs))
 Rule("LOOH_Lipid_metab", LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin=None) + Iron(b=None),
      keff_LOOH_Lipid_metab)
 
-# Drug treatment rules below
-# TODO: Don't worry about the drug treatment rules below for now
+# LO degradation
+Parameter('k_deg_LO', 0)
+Rule('deg_LO', LO() >> None, k_deg_LO)
 
 # System Xc- + Erastin   <--> System Xc- : Erastin
 Parameter("kf_Xc_Erastin", 0)  # 1
-Parameter("kr_Xc_Erastin", 0)  # 1
+Parameter("kr_Xc_Erastin", 100)  # 1
 Rule("Xc_Erastin", System_Xc(erastin=None) + Erastin(sys_xc=None) | System_Xc(erastin=1) % Erastin(sys_xc=1),
      kf_Xc_Erastin, kr_Xc_Erastin)
 
 # RSL3 + GPX4 <--> RSL3:GPX4
 Parameter("kf_RSL3_GPX4", 0)  # 1
-Parameter("kr_RSL3_GPX4", 0)  # 100
+Parameter("kr_RSL3_GPX4", 100)  # 100
 Rule("RSL3_binds_GPX4", RSL3(gpx4=None) + GPX4(rsl3=None) | RSL3(gpx4=1) % GPX4(rsl3=1), kf_RSL3_GPX4, kr_RSL3_GPX4)
 
 # Ferrostatin-1 + LO. <--> Ferrostatin-1:LO.
 Parameter("kf_Ferrostatin_LO", 0)  # 1
-Parameter("kr_Ferrostatin_LO", 0)  # 1
+Parameter("kr_Ferrostatin_LO", 100)  # 1
 Rule("Ferrostatin_LO", Ferrostatin(lo=None) + LO(ferrostatin=None) | Ferrostatin(lo=1) % LO(ferrostatin=1),
      kf_Ferrostatin_LO, kr_Ferrostatin_LO)
 
 # Iron storage & trafficking heme metabolism + Iron <--> Iron storage & trafficking heme metabolism : Iron
 Parameter("kf_Storage", 0)  # 1
-Parameter("kr_Storage", 0)  # 1
+Parameter("kr_Storage", 100)  # 1
 Rule("Storage_hememetabolism", Iron_storage(iron=None) + Iron(b=None) | Iron_storage(iron=1) % Iron(b=1),
      kf_Storage, kr_Storage)
 
 # Iron Chelators + Iron  <--> Iron Chelators : Iron
 Parameter("kf_Chelators", 0)  # 1
-Parameter("kr_Chelators", 0)  # 1
+Parameter("kr_Chelators", 100)  # 1
 Rule("Chelators_Iron", Iron_chelators(iron=None) + Iron(b=None) | Iron(b=1) % Iron_chelators(iron=1),
      kf_Chelators, kr_Chelators)
 
@@ -261,16 +271,22 @@ for km in [100]:
                 ["Glu_intra_Obs", "Glu_extra_Obs"],
                 ["Gly_Obs","GSSG_Obs" ,"GSH_Obs"],
                 ["LOOH_Obs", "LOH_Obs"],
-                ["NADPH_Obs","NADPplus_Obs","NADPtotal"]]
+                ["NADPH_Obs","NADPplus_Obs","NADPtotal"],
+                ["LO_Obs","Irontotal","Lipid_metab_Obs"]]
+
     # obs2plot = [["Cystine_extra_Obs", "Cystine_intra_Obs", "Cys_Obs"],
     #             ["Glu_intra_Obs", "Glu_extra_Obs"],
     #             ["Gly_Obs", "GSH_Obs", "GSSG_Obs"],
     #             ["NADPplus_Obs", "NADPH_Obs"]]
 
-    fig, axs = plt.subplots(nrows=len(obs2plot), ncols=1, sharex=True, figsize=(9.6, 9.6))
+    fig, axs = plt.subplots(nrows=len(obs2plot), ncols=1, sharex=True, constrained_layout = True,
+                            figsize = (9.6, 2.4*len(obs2plot)))
+    # default figsize = (6.4,4.8)
     # print(len(axs))
     # quit()
     fig.suptitle("km_LOOH_GSH = %g" % km, fontsize=15)
+    fig.supxlabel("Time")
+    fig.supylabel("Concentration")
 
     row = 0
     col = 0
@@ -278,9 +294,9 @@ for km in [100]:
         for obs_name in obs_group:
 
             axs[row].plot(Tspan, result.observables[obs_name], lw=2, label=obs_name)
-            if row == 1:
-                axs[row].set_xlabel("Time", fontsize=16)
-            axs[row].set_ylabel("Concentration", fontsize=16)
+            #if row == 1:
+               # axs[row].set_xlabel("Time", fontsize=16)
+           # axs[row].set_ylabel("Concentration", fontsize=16)
             axs[row].legend(loc="best", fontsize=16)
             axs[row].xaxis.set_tick_params(labelsize=16)
             axs[row].yaxis.set_tick_params(labelsize=16)
@@ -291,7 +307,7 @@ for km in [100]:
         else:
             col += 1
 
-    plt.tight_layout()
+    # plt.tight_layout()
     # plt.savefig("km_Glu_Cys_%g.pdf" % km,format="pdf")
 
 plt.show()
