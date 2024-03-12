@@ -64,13 +64,13 @@ Parameter("Cystine_extra_0", 0)  # 0.0009/1e3 * Volume * N_A * 1000) #0.0009 is 
 Parameter("Erastin_0", 0)
 Parameter("RSL3_0", 0)  # 6e6)  # 2e6 real value todo
 Parameter("Cys_0", 0)
-Parameter("Iron_storage_0", 0)
+Parameter("Iron_storage_0", 10)
 Parameter("Iron_0", 100)  # 0.61/1e6 * Volume * N_A)  # 0.61 is in micromolar todo
 Parameter("Iron_chelators_0", 0)
 Parameter("Ferrostatin_0", 0)
 Parameter("LO_0", 0)
 Parameter("Glu_Cys_GCL_Product_0", 0)
-Parameter("Lipid_metab_0", 0)  # 1) todo
+Parameter("Lipid_metab_0", 500)  # 1) todo
 Parameter("GSH_0", 0)  # 1e5)
 Parameter("GSSG_0", 0)  # 1e3)  # originally 1e5, changed to fix scale of Gly,GSH,GSSG graph todo
 Parameter("NADPH_0", 500)  # 3197682) todo
@@ -78,7 +78,7 @@ Parameter("GR_0", 2e6)  # 9593046) todo -> 2e6
 Parameter("NADPplus_0", 0)
 Parameter("G6PD_0", 2e6)  # 19719039) todo -> 2e6
 
-Parameter("PPARg_0", 0)  # 1*42)  # estimating 1 ppm times 42 million proteins/cell
+Parameter("PPARg_0", 100)  # 1*42)  # estimating 1 ppm times 42 million proteins/cell
 
 # Initials
 Initial(System_Xc(erastin=None), System_Xc_0)
@@ -190,7 +190,7 @@ Parameter('k_deg_GSH', 0.05) #todo originally 1 -> 0.08
 Rule('deg_GSH', GSH() >> None, k_deg_GSH)
 
 # LOOH synthesis
-Parameter('k_synth_LOOH', 100) #todo originally 100 -> 75
+Parameter('k_synth_LOOH', 1000) #todo originally 100 -> 75
 Rule('synth_LOOH', None >> LOOH(), k_synth_LOOH)
 
 # LOOH degradation
@@ -204,11 +204,11 @@ Rule('deg_LOH', LOH() >> None, k_deg_LOH)
 ######### TODO: Work on turning on the 4 rules below for our next meeting
 
 # PPARG -> PPARG + Lipid Metabolism
-Parameter("k_PPARG_Lipid_Metab", 100)  # 1
+Parameter("k_PPARG_Lipid_Metab", 3)  # 1
 Rule("PPARG_Lipid_metab", PPARg() >> PPARg() + Lipid_metab(), k_PPARG_Lipid_Metab)
 
 # GSSG + NADPH + GR -> GSH + NADP+ + GR
-Parameter("kcat_GSSG_NADPH", 5e-7)  # 5e-7 todo
+Parameter("kcat_GSSG_NADPH", 5e-7)  # 3e-7 todo
 Parameter("km_GSSG_NADPH", 100)  # 1e9
 Expression("keff_GSSG_NADPH", kcat_GSSG_NADPH / (km_GSSG_NADPH + GSSG_Obs + NADPH_Obs))
 Rule("GSSG_GSH_NADPH", GSSG() + NADPH() + GR() >> GSH() + NADPplus() + GR(), keff_GSSG_NADPH)
@@ -220,14 +220,18 @@ Expression("keff_NADPplus_NADPH", kcat_NADPplus_NADPH / (km_NADPplus_NADPH + NAD
 Rule("NADPplus_NADPH", NADPplus() + G6PD() >> NADPH() + G6PD(), keff_NADPplus_NADPH)
 
 # LOOH + Lipid_metab + Iron -> LO. + Iron
-Parameter("kcat_LOOH_Lipid_metab", 0)  # 1e3
+Parameter("kcat_LOOH_Lipid_metab", 1e-2)  # 1e3
 Parameter("km_LOOH_Lipid_metab", 100)  # 100
 Expression("keff_LOOH_Lipid_metab", kcat_LOOH_Lipid_metab / (km_LOOH_Lipid_metab + LOOH_Obs + Lipid_metab_Obs))
 Rule("LOOH_Lipid_metab", LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin=None) + Iron(b=None),
      keff_LOOH_Lipid_metab)
 
+# Lipid_metab degradation
+Parameter('k_deg_Lipid_metab', 0) #0.04
+Rule('deg_Lipid_metab', Lipid_metab() >> None, k_deg_Lipid_metab)
+
 # LO degradation
-Parameter('k_deg_LO', 0)
+Parameter('k_deg_LO', 0.5)
 Rule('deg_LO', LO() >> None, k_deg_LO)
 
 # System Xc- + Erastin   <--> System Xc- : Erastin
@@ -248,7 +252,7 @@ Rule("Ferrostatin_LO", Ferrostatin(lo=None) + LO(ferrostatin=None) | Ferrostatin
      kf_Ferrostatin_LO, kr_Ferrostatin_LO)
 
 # Iron storage & trafficking heme metabolism + Iron <--> Iron storage & trafficking heme metabolism : Iron
-Parameter("kf_Storage", 0)  # 1
+Parameter("kf_Storage", 10)  # 1
 Parameter("kr_Storage", 100)  # 1
 Rule("Storage_hememetabolism", Iron_storage(iron=None) + Iron(b=None) | Iron_storage(iron=1) % Iron(b=1),
      kf_Storage, kr_Storage)
@@ -272,7 +276,7 @@ for km in [100]:
                 ["Gly_Obs","GSSG_Obs" ,"GSH_Obs"],
                 ["LOOH_Obs", "LOH_Obs"],
                 ["NADPH_Obs","NADPplus_Obs","NADPtotal"],
-                ["LO_Obs","Irontotal","Lipid_metab_Obs"]]
+                ["Irontotal","Lipid_metab_Obs","LO_Obs"]]
 
     # obs2plot = [["Cystine_extra_Obs", "Cystine_intra_Obs", "Cys_Obs"],
     #             ["Glu_intra_Obs", "Glu_extra_Obs"],
