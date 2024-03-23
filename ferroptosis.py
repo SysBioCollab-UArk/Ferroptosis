@@ -180,7 +180,7 @@ Rule("Gly_Synthesis", None >> Gly(), k_Gly)
 # TODO: rules above are included in StartSystemxc_EndGSH.py
 
 # LOOH + GSH + GPX4 -> LOH + GSSG + GPX4
-Parameter("kcat_LOOH_GSH", 5e-7)  #todo originally  1.5e-6
+Parameter("kcat_LOOH_GSH", 2.3e-7)  #todo originally  5e-7
 Parameter("km_LOOH_GSH", 100)  # 100
 Expression("keff_LOOH_GSH", kcat_LOOH_GSH / (km_LOOH_GSH + LOOH_Obs + GSH_Obs))
 Rule("LOOH_LOH", LOOH() + GSH() + GPX4(rsl3=None) >> LOH() + GSSG() + GPX4(rsl3=None), keff_LOOH_GSH)
@@ -208,7 +208,7 @@ Parameter("k_PPARG_Lipid_Metab", 3)  # 1
 Rule("PPARG_Lipid_metab", PPARg() >> PPARg() + Lipid_metab(), k_PPARG_Lipid_Metab)
 
 # GSSG + NADPH + GR -> GSH + NADP+ + GR
-Parameter("kcat_GSSG_NADPH", 5e-7)  # 3e-7 todo
+Parameter("kcat_GSSG_NADPH", 5e-6)  # 5e-7 todo - changed
 Parameter("km_GSSG_NADPH", 100)  # 1e9
 Expression("keff_GSSG_NADPH", kcat_GSSG_NADPH / (km_GSSG_NADPH + GSSG_Obs + NADPH_Obs))
 Rule("GSSG_GSH_NADPH", GSSG() + NADPH() + GR() >> GSH() + NADPplus() + GR(), keff_GSSG_NADPH)
