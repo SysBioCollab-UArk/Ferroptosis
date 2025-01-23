@@ -64,7 +64,7 @@ Parameter("LOH_0", 50)
 
 Parameter("Glu_intra_0", 0)  # 0.1109/1e3 * Volume * N_A) #0.1109 is in mM
 Parameter("Cystine_extra_0", 0)  # 0.0009/1e3 * Volume * N_A * 1000) #0.0009 is in mM
-Parameter("Erastin_0", 0)
+Parameter("Erastin_0", 1e9)
 Parameter("RSL3_0", 0)  # 6e6)  # 2e6 real value todo
 Parameter("Cys_0", 0)
 Parameter("Iron_storage_0", 10)
@@ -140,17 +140,23 @@ Observable("Irontotal", Iron())
 # Glu (intracellular) + Cystine (extracellular) + System Xc-->
 # Glu (extracellular) + Cystine (intracellular) + System Xc-
 
-Parameter("k_Glu_intra", 2e3)
+# Parameter("k_Glu_intra", 2e3)
 # Rule("Glu_Intra_Synthesis", None >> Glu_intra(), k_Glu_intra)
-Rule("Glu_Intra_Synthesis", None >> Glu(loc='intra'), k_Glu_intra)
+# Rule("Glu_Intra_Synthesis", None >> Glu(loc='intra'), k_Glu_intra)
+Parameter("k_Glu_intra_syn", 2e3)
+Parameter("k_Glu_intra_deg", 1e-3)
+Rule("Glu_Intra_Syn_Deg", None | Glu(loc='intra'), k_Glu_intra_syn, k_Glu_intra_deg)
 
 Parameter("k_Glu_extra", 0.1)  # 5 originally
 # Rule("Glu_Extra_Degradation", Glu_extra() >> None, k_Glu_extra)
 Rule("Glu_Extra_Degradation", Glu(loc='extra') >> None, k_Glu_extra)
 
-Parameter("k_Cystine_extra", 1e3)
+# Parameter("k_Cystine_extra", 1e3)
 # Rule("Cystine_Extra_Synthesis", None >> Cystine_extra(), k_Cystine_extra)
-Rule("Cystine_Extra_Synthesis", None >> Cystine(loc='extra'), k_Cystine_extra)
+# Rule("Cystine_Extra_Synthesis", None >> Cystine(loc='extra'), k_Cystine_extra)
+Parameter("k_Cystine_extra_syn", 1e3)
+Parameter("k_Cystine_extra_deg", 1e-3)
+Rule("Cystine_Extra_Syn_Deg", None | Cystine(loc='extra'), k_Cystine_extra_syn, k_Cystine_extra_deg)
 
 Parameter("kcat_Glu_Cystine", 1e-7)
 # Parameter("km_Glu_Cystine", 1e7)
@@ -249,7 +255,7 @@ Parameter('k_deg_LO', 0.5)
 Rule('deg_LO', LO() >> None, k_deg_LO)
 
 # System Xc- + Erastin   <--> System Xc- : Erastin
-Parameter("kf_Xc_Erastin", 0)  # 1
+Parameter("kf_Xc_Erastin", 1)  # 1
 Parameter("kr_Xc_Erastin", 100)  # 1
 Rule("Xc_Erastin", System_Xc(erastin=None) + Erastin(sys_xc=None) | System_Xc(erastin=1) % Erastin(sys_xc=1),
      kf_Xc_Erastin, kr_Xc_Erastin)
@@ -280,17 +286,25 @@ Rule("Chelators_Iron", Iron_chelators(iron=None) + Iron(b=None) | Iron(b=1) % Ir
 if __name__ == '__main__':
 
     # run simulation
-    Tspan = np.linspace(0, 200, 1001)
+    Tspan = np.linspace(0, 10000, 100001)
     sim = ScipyOdeSimulator(model, Tspan, verbose=False)
 
-    for km in [100, 1e3, 1e4]:
+    Erastin_equil = []
+    Erastin_conc = [0, 3e8, 5e8, 7e8, 1e9]
+    for km, e0 in zip([100] * 5, Erastin_conc): # , 1e3, 1e4]:
         print('km_LOOH_GSH:', km)
-        result = sim.run(param_values={"km_LOOH_GSH": km})
+        print('Erastin_0:', e0)
+        result = sim.run(param_values={"km_LOOH_GSH": km, 'Erastin_0': e0})
+
+        print(result.observables['GSH_Obs'][-1])
+        Erastin_equil.append(result.observables['GSH_Obs'][-1])
 
         # plot results
-        obs2plot = [["Cystine_extra_Obs", "Cystine_intra_Obs", "Cys_Obs"],
+        obs2plot = [#["Cystine_extra_Obs", "Cystine_intra_Obs", "Cys_Obs"],
+                    ["Cystine_intra_Obs", "Cys_Obs"],
                     ["Glu_intra_Obs", "Glu_extra_Obs"],
-                    ["Gly_Obs","GSSG_Obs" ,"GSH_Obs"],
+                    # ["Gly_Obs","GSSG_Obs" ,"GSH_Obs"],
+                    ["GSH_Obs"],
                     ["LOOH_Obs", "LOH_Obs"],
                     ["NADPH_Obs","NADPplus_Obs","NADPtotal"],
                     ["Irontotal","Lipid_metab_Obs","LO_Obs"]]
@@ -298,7 +312,7 @@ if __name__ == '__main__':
         fig, axs = plt.subplots(nrows=len(obs2plot), ncols=1, sharex='all', constrained_layout=True,
                                 figsize = (9.6, 2.4*len(obs2plot)))
         # default figsize = (6.4,4.8)
-        fig.suptitle("km_LOOH_GSH = %g" % km, fontsize=16)
+        fig.suptitle("km_LOOH_GSH = %g, Erastin_0 = %g" % (km, e0), fontsize=16)
         fig.supxlabel("Time", fontsize=16)
         fig.supylabel("Concentration", fontsize=16)
 
@@ -317,6 +331,13 @@ if __name__ == '__main__':
                 col += 1
 
         # plt.savefig("km_Glu_Cys_%g.pdf" % km,format="pdf")
+
+    # plot equilibrium Erastin values
+    plt.figure(constrained_layout=True)
+    plt.plot(Erastin_conc, np.array(Erastin_equil) / Erastin_equil[0] * 100, 'ko', ms=8)
+    plt.ylim(bottom=0)
+    plt.xlabel("[Erastin]", fontsize=16)
+    plt.ylabel("GSH level (%)", fontsize=16)
 
     plt.show()
 
