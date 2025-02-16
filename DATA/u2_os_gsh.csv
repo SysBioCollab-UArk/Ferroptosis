@@ -1,0 +1,6 @@
+observable,time,time_units,average,stderr,amount_units,expt_id,alt_expt_id
+GSH_Obs,300,min,1,0.005,fraction,u2os_erastin,u2os_erastin_ctrl
+GSH_Obs,300,min,0.662335308,0.031102399,fraction,u2os_erastin,u2os_erastin_conc1
+GSH_Obs,300,min,0.611084065,0.091805291,fraction,u2os_erastin,u2os_erastin_conc2
+GSH_Obs,300,min,0.328011062,0.036416038,fraction,u2os_erastin,u2os_erastin_conc3
+GSH_Obs,300,min,0.138185698,0.039448334,fraction,u2os_erastin,u2os_erastin_conc4
