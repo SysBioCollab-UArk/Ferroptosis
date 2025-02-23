@@ -55,7 +55,7 @@ Monomer("Iron", ["b"])
 Parameter("System_Xc_0", 100)  # 50*42 - estimating 50 ppm times 42 million proteins/cell
 Parameter("Trx_TrxR_0", 100)  # originally 0
 Parameter("GCL_0", 100)  # origianlly 1918609200
-Parameter("GSS_0", 250)  # 15 is in mM, originally 15/1e3 * Volume * N_A
+Parameter("GSS_0", 1e3)  # 250 15 is in mM, originally 15/1e3 * Volume * N_A
 Parameter("Gly_0", 0)  # originally 401805906
 # parameters above included in StartSystemxc_EndGSH.py
 Parameter("GPX4_0", 2e6)  # CHANGE THIS BACK5/1e3 * Volume * N_A) #5 is in mM
@@ -64,7 +64,7 @@ Parameter("LOH_0", 50)
 
 Parameter("Glu_intra_0", 0)  # 0.1109/1e3 * Volume * N_A) #0.1109 is in mM
 Parameter("Cystine_extra_0", 0)  # 0.0009/1e3 * Volume * N_A * 1000) #0.0009 is in mM
-Parameter("Erastin_0", 1e9)
+Parameter("Erastin_0", 0)  # 1e9
 Parameter("RSL3_0", 0)  # 6e6)  # 2e6 real value todo
 Parameter("Cys_0", 0)
 Parameter("Iron_storage_0", 10)
@@ -76,7 +76,7 @@ Parameter("Glu_Cys_GCL_Product_0", 0)
 Parameter("Lipid_metab_0", 500)  # 1) todo
 Parameter("GSH_0", 0)  # 1e5)
 Parameter("GSSG_0", 0)  # 1e3)  # originally 1e5, changed to fix scale of Gly,GSH,GSSG graph todo
-Parameter("NADPH_0", 500)  # 3197682) todo
+Parameter("NADPH_0", 1e4)  # 500 3197682) todo
 Parameter("GR_0", 2e6)  # 9593046) todo -> 2e6
 Parameter("NADPplus_0", 0)
 Parameter("G6PD_0", 2e6)  # 19719039) todo -> 2e6
@@ -190,12 +190,17 @@ Rule("Glu_Cys_GCL", Glu(loc='intra') + Cys() + GCL() >> Glu_Cys_GCL_Product() + 
 Parameter("kcat_Gly_Glu_Cys_GCL_Product", 7e-5)  # 2e-7, 1e-4
 Parameter("km_Gly_Glu_Cys_GCL_Product", 100)  # 100
 Expression("keff_Gly_Glu_Cys_GCL_Product",
-           kcat_Gly_Glu_Cys_GCL_Product / (km_Gly_Glu_Cys_GCL_Product+Gly_Obs+Glu_Cys_GCL_Product_Obs))
+           kcat_Gly_Glu_Cys_GCL_Product / (km_Gly_Glu_Cys_GCL_Product + Gly_Obs + Glu_Cys_GCL_Product_Obs))
 Rule("Gly_Glu_Cys_GCL_Product", Glu_Cys_GCL_Product() + Gly() + GSS() >> GSH() + GSS(),
      keff_Gly_Glu_Cys_GCL_Product)
 
-Parameter("k_Gly", 20)  # 100
-Rule("Gly_Synthesis", None >> Gly(), k_Gly)
+# Glu_Cys_GCL_Product -> None
+Parameter('kdeg_Glu_Cys_GCL_Prod', 100)
+Rule('Glu_Cys_GCL_Product_degradation', Glu_Cys_GCL_Product() >> None, kdeg_Glu_Cys_GCL_Prod)
+
+Parameter("k_Gly_synth", 1e3)  # 20 100
+Parameter('k_Gly_deg', 100)
+Rule("Gly_Synth_Deg", None | Gly(), k_Gly_synth, k_Gly_deg)
 
 # TODO: rules above are included in StartSystemxc_EndGSH.py
 
