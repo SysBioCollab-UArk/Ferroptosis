@@ -11,130 +11,118 @@ Diameter = 15  # micrometers https://www.ncbi.nlm.nih.gov/pmc/articles/PMC407900
 Volume = 4/3 * pi * (Diameter / 1e6 / 2)**3  # m^3
 
 # Metabolites
-# Monomer("Glu_intra")
-# Monomer("Cystine_extra")
-# Monomer("Glu_extra")
-# Monomer("Cystine_intra")
-
 Monomer('Glu', ['loc'], {'loc': ['intra', 'extra']})
 Monomer('Cystine', ['loc'], {'loc': ['intra', 'extra']})
-
 Monomer("Cys")
 Monomer("Glu_Cys_GCL_Product")
 Monomer("Gly")
 Monomer("GSH")
-# monomers above included in StartSystemxc_EndGSH.py
 Monomer("GSSG")
 Monomer("NADPplus")
 Monomer("NADPH")
-Monomer("Iron_chelators", ["iron"])
 Monomer("LOOH")
 Monomer("LOH")
-Monomer("Ferrostatin", ["lo"])
-Monomer("LO", ["ferrostatin"])
 Monomer("Lipid_metab")
+Monomer("LO", ["ferrostatin"])
 
-# enzymes
+Parameter("Glu_intra_0", 0)  # 0.1109/1e3 * Volume * N_A) #0.1109 is in mM
+Parameter("Cystine_extra_0", 0)  # 0.0009/1e3 * Volume * N_A * 1000) #0.0009 is in mM
+Parameter("Cys_0", 0)
+Parameter("Glu_Cys_GCL_Product_0", 0)
+Parameter("Gly_0", 0)  # originally 401805906
+Parameter("GSH_0", 0)  # 1e5)
+Parameter("GSSG_0", 0)  # 1e3)  # originally 1e5, changed to fix scale of Gly,GSH,GSSG graph
+Parameter("NADPplus_0", 0)
+Parameter("NADPH_0", 1e4)  # 500 3197682) # TODO: this must be non-zero (may want to add a source term)
+Parameter("LOOH_0", 0)  # 1000 532947)
+Parameter("LOH_0", 0)  # 50
+Parameter("Lipid_metab_0", 0)  # 500 1)
+Parameter("LO_0", 0)
+
+Initial(Glu(loc='intra'), Glu_intra_0)
+Initial(Cystine(loc='extra'), Cystine_extra_0)
+Initial(Cys(), Cys_0)
+Initial(Glu_Cys_GCL_Product(), Glu_Cys_GCL_Product_0)
+Initial(Gly(), Gly_0)
+Initial(GSH(), GSH_0)
+Initial(GSSG(), GSSG_0)
+Initial(NADPplus(), NADPplus_0)
+Initial(NADPH(), NADPH_0)
+Initial(LOOH(), LOOH_0)
+Initial(LOH(), LOH_0)
+Initial(Lipid_metab(), Lipid_metab_0)
+Initial(LO(ferrostatin=None), LO_0)
+
+# Enzymes
 Monomer("System_Xc", ["erastin"])
-Monomer("Trx_TrxR")
 Monomer("GCL")
 Monomer("GSS")
-# monomers above included in StartSystemxc_EndGSH.py
 Monomer("GPX4", ["rsl3"])
 Monomer("GR")
 Monomer("G6PD")
 Monomer("PPARg")
-Monomer("Iron_storage", ["iron"])
-
-# drugs
-Monomer("Erastin", ["sys_xc"])
-Monomer("RSL3", ["gpx4"])
 Monomer("Iron", ["b"])
 
-# Parameters
 Parameter("System_Xc_0", 100)  # 50*42 - estimating 50 ppm times 42 million proteins/cell
-Parameter("Trx_TrxR_0", 100)  # originally 0
 Parameter("GCL_0", 100)  # origianlly 1918609200
 Parameter("GSS_0", 1e3)  # 250 15 is in mM, originally 15/1e3 * Volume * N_A
-Parameter("Gly_0", 0)  # originally 401805906
-# parameters above included in StartSystemxc_EndGSH.py
 Parameter("GPX4_0", 2e6)  # CHANGE THIS BACK5/1e3 * Volume * N_A) #5 is in mM
-Parameter("LOOH_0", 1000)  # 532947)
-Parameter("LOH_0", 50)
-
-Parameter("Glu_intra_0", 0)  # 0.1109/1e3 * Volume * N_A) #0.1109 is in mM
-Parameter("Cystine_extra_0", 0)  # 0.0009/1e3 * Volume * N_A * 1000) #0.0009 is in mM
-Parameter("Erastin_0", 0)  # 1e9
-Parameter("RSL3_0", 0)  # 6e6)  # 2e6 real value todo
-Parameter("Cys_0", 0)
-Parameter("Iron_storage_0", 10)
-Parameter("Iron_0", 100)  # 0.61/1e6 * Volume * N_A)  # 0.61 is in micromolar todo
-Parameter("Iron_chelators_0", 0)
-Parameter("Ferrostatin_0", 0)
-Parameter("LO_0", 0)
-Parameter("Glu_Cys_GCL_Product_0", 0)
-Parameter("Lipid_metab_0", 500)  # 1) todo
-Parameter("GSH_0", 0)  # 1e5)
-Parameter("GSSG_0", 0)  # 1e3)  # originally 1e5, changed to fix scale of Gly,GSH,GSSG graph todo
-Parameter("NADPH_0", 1e4)  # 500 3197682) todo
-Parameter("GR_0", 2e6)  # 9593046) todo -> 2e6
-Parameter("NADPplus_0", 0)
-Parameter("G6PD_0", 2e6)  # 19719039) todo -> 2e6
-
+Parameter("GR_0", 2e6)  # 9593046)
+Parameter("G6PD_0", 2e6)  # 19719039)
 Parameter("PPARg_0", 100)  # 1*42)  # estimating 1 ppm times 42 million proteins/cell
+Parameter("Iron_0", 100)  # 0.61/1e6 * Volume * N_A)  # 0.61 is in micromolar
 
-# Initials
 Initial(System_Xc(erastin=None), System_Xc_0)
-Initial(Trx_TrxR(), Trx_TrxR_0)
 Initial(GCL(), GCL_0)
 Initial(GSS(), GSS_0)
-Initial(Gly(), Gly_0)
-# initials above included in StartSystemxc_EndGSH.py
-# Initial(Glu_intra(), Glu_intra_0)
-Initial(Glu(loc='intra'), Glu_intra_0)
-# Initial(Cystine_extra(), Cystine_extra_0)
-Initial(Cystine(loc='extra'), Cystine_extra_0)
-Initial(Erastin(sys_xc=None), Erastin_0)
-Initial(RSL3(gpx4=None), RSL3_0)
 Initial(GPX4(rsl3=None), GPX4_0)
-Initial(Cys(), Cys_0)
-Initial(Iron_storage(iron=None), Iron_storage_0)
-Initial(Iron(b=None), Iron_0)
-Initial(Iron_chelators(iron=None), Iron_chelators_0)
-Initial(Ferrostatin(lo=None), Ferrostatin_0)
-Initial(PPARg(), PPARg_0)
-Initial(LO(ferrostatin=None), LO_0)
-Initial(Glu_Cys_GCL_Product(), Glu_Cys_GCL_Product_0)
-Initial(LOOH(), LOOH_0)
-Initial(Lipid_metab(), Lipid_metab_0)
-Initial(GSH(), GSH_0)
-Initial(GSSG(), GSSG_0)
-Initial(NADPH(), NADPH_0)
 Initial(GR(), GR_0)
-Initial(NADPplus(), NADPplus_0)
 Initial(G6PD(), G6PD_0)
-Initial(LOH(), LOH_0)
+Initial(PPARg(), PPARg_0)
+Initial(Iron(b=None), Iron_0)
+
+# Inhibitors
+Monomer("Erastin", ["sys_xc"])
+Monomer("Trx_TrxR")
+Monomer("RSL3", ["gpx4"])
+Monomer("Iron_chelators", ["iron"])
+Monomer("Iron_storage", ["iron"])
+Monomer("Ferrostatin", ["lo"])
+
+Parameter("Erastin_0", 0)  # 1e9
+Parameter("Trx_TrxR_0", 0)  # 100 originally 0
+Parameter("RSL3_0", 0)  # 6e6)  # 2e6 real value
+Parameter("Iron_chelators_0", 0)
+Parameter("Iron_storage_0", 0)  # 10
+Parameter("Ferrostatin_0", 0)
+
+Initial(Erastin(sys_xc=None), Erastin_0)
+Initial(Trx_TrxR(), Trx_TrxR_0)
+Initial(RSL3(gpx4=None), RSL3_0)
+Initial(Iron_chelators(iron=None), Iron_chelators_0)
+Initial(Iron_storage(iron=None), Iron_storage_0)
+Initial(Ferrostatin(lo=None), Ferrostatin_0)
 
 # Observables
 Observable("Cys_Obs", Cys())
-Observable("Cystine_extra_Obs", Cystine(loc='extra')) # Cystine_extra())
+Observable("Glu_Cys_GCL_Product_Obs", Glu_Cys_GCL_Product())
+Observable("Gly_Obs", Gly())
+Observable("GSH_Obs", GSH())
+Observable("LOOH_Obs", LOOH())
+Observable("NADPH_Obs", NADPH())
+Observable("GSSG_Obs", GSSG())
+Observable("NADPplus_Obs", NADPplus())
+Observable("Lipid_metab_Obs", Lipid_metab())
+Observable("LO_Obs", LO(ferrostatin=None))
+
+'''Observable("Cystine_extra_Obs", Cystine(loc='extra')) # Cystine_extra())
 Observable("Cystine_intra_Obs", Cystine(loc='intra')) # Cystine_intra())
 Observable("Glu_intra_Obs", Glu(loc='intra')) # Glu_intra())
 Observable("Glu_extra_Obs", Glu(loc='extra')) # Glu_extra())
-Observable("Gly_Obs", Gly())
-Observable("GSH_Obs", GSH())
-Observable("Glu_Cys_GCL_Product_Obs", Glu_Cys_GCL_Product())
-# observables above included in StartSystemxc_EndGSH.py
-Observable("LO_Obs", LO(ferrostatin=None))
-Observable("LOOH_Obs", LOOH())
 Observable("LOH_Obs", LOH())
 Observable("GPX_4_free", GPX4(rsl3=None))
-Observable("Lipid_metab_Obs", Lipid_metab())
-Observable("GSSG_Obs", GSSG())
-Observable("NADPH_Obs", NADPH())
-Observable("NADPplus_Obs", NADPplus())
 Observable("NADPtotal", NADPH()+NADPplus())
-Observable("Irontotal", Iron())
+Observable("Irontotal", Iron())'''
 
 # Rules
 # Glu (intracellular) + Cystine (extracellular) + System Xc-->
@@ -174,10 +162,10 @@ Parameter("k_Cystine_intra", 0.1)
 Rule("Cystine_intra_to_cys", Cystine(loc='intra') >> Cys(), k_Cystine_intra)
 
 # Cys  + Trx/TrxR -> ? + Trx/TrxR  # Note: Giving value here is important to stabilize
-Parameter("kcat_Cys_TrxR", 0)
-# Parameter("km_Cys_TrxR", 100)
-# Expression("keff_Cys_TrxR", kcat_Cys_TrxR / (km_Cys_TrxR+Cys_Obs))
-Rule("Cys_deg_TrxR", Cys() + Trx_TrxR() >> Trx_TrxR(), kcat_Cys_TrxR)
+Parameter("kcat_Cys_TrxR", 1)
+Parameter("km_Cys_TrxR", 100)
+Expression("keff_Cys_TrxR", kcat_Cys_TrxR / (km_Cys_TrxR + Cys_Obs))
+Rule("Cys_deg_TrxR", Cys() + Trx_TrxR() >> Trx_TrxR(), keff_Cys_TrxR)  # kcat_Cys_TrxR)
 
 # Glu + Cys + GCL -> Glu_Cys_GCL_Product + GCL
 Parameter("kcat_Glu_Cys_GCL", 2e-7)
@@ -202,44 +190,40 @@ Parameter("k_Gly_synth", 1e3)  # 20 100
 Parameter('k_Gly_deg', 100)
 Rule("Gly_Synth_Deg", None | Gly(), k_Gly_synth, k_Gly_deg)
 
-# TODO: rules above are included in StartSystemxc_EndGSH.py
-
 # LOOH + GSH + GPX4 -> LOH + GSSG + GPX4
-Parameter("kcat_LOOH_GSH", 2.3e-7)  #todo originally  5e-7
+Parameter("kcat_LOOH_GSH", 2.3e-7)
 Parameter("km_LOOH_GSH", 100)  # 100
 Expression("keff_LOOH_GSH", kcat_LOOH_GSH / (km_LOOH_GSH + LOOH_Obs + GSH_Obs))
 Rule("LOOH_LOH", LOOH() + GSH() + GPX4(rsl3=None) >> LOH() + GSSG() + GPX4(rsl3=None), keff_LOOH_GSH)
 
 # GSH degradation
-Parameter('k_deg_GSH', 0.05) #todo originally 1 -> 0.08
+Parameter('k_deg_GSH', 0.05)
 Rule('deg_GSH', GSH() >> None, k_deg_GSH)
 
 # LOOH synthesis
-Parameter('k_synth_LOOH', 1000) #todo originally 100 -> 75
+Parameter('k_synth_LOOH', 1000)
 Rule('synth_LOOH', None >> LOOH(), k_synth_LOOH)
 
 # LOOH degradation
-Parameter('k_deg_LOOH', 0.05) #todo originally 1 -> 0.08
+Parameter('k_deg_LOOH', 0.05)
 Rule('deg_LOOH', LOOH() >> None, k_deg_LOOH)
 
 # LOH degradation
-Parameter('k_deg_LOH', 0.08) #todo originally 1 -> 0.08
+Parameter('k_deg_LOH', 0.08)
 Rule('deg_LOH', LOH() >> None, k_deg_LOH)
-
-######### TODO: Work on turning on the 4 rules below for our next meeting
 
 # PPARG -> PPARG + Lipid Metabolism
 Parameter("k_PPARG_Lipid_Metab", 3)  # 1
 Rule("PPARG_Lipid_metab", PPARg() >> PPARg() + Lipid_metab(), k_PPARG_Lipid_Metab)
 
 # GSSG + NADPH + GR -> GSH + NADP+ + GR
-Parameter("kcat_GSSG_NADPH", 5e-6)  # 5e-7 todo - changed
+Parameter("kcat_GSSG_NADPH", 5e-6)  # 5e-7
 Parameter("km_GSSG_NADPH", 100)  # 1e9
 Expression("keff_GSSG_NADPH", kcat_GSSG_NADPH / (km_GSSG_NADPH + GSSG_Obs + NADPH_Obs))
 Rule("GSSG_GSH_NADPH", GSSG() + NADPH() + GR() >> GSH() + NADPplus() + GR(), keff_GSSG_NADPH)
 
 # NADP+ + G6PD -> NADPH + G6PD (only if one compound is required for reaction to occur)
-Parameter("kcat_NADPplus_NADPH", 1e-4)  # 1e-3)  # 1e-3 todo
+Parameter("kcat_NADPplus_NADPH", 1e-4)  # 1e-3)
 Parameter("km_NADPplus_NADPH", 100)  # 100
 Expression("keff_NADPplus_NADPH", kcat_NADPplus_NADPH / (km_NADPplus_NADPH + NADPplus_Obs))
 Rule("NADPplus_NADPH", NADPplus() + G6PD() >> NADPH() + G6PD(), keff_NADPplus_NADPH)
@@ -252,7 +236,7 @@ Rule("LOOH_Lipid_metab", LOOH() + Lipid_metab() + Iron(b=None) >> LO(ferrostatin
      keff_LOOH_Lipid_metab)
 
 # Lipid_metab degradation
-Parameter('k_deg_Lipid_metab', 0) #0.04
+Parameter('k_deg_Lipid_metab', 0.04) #0.04
 Rule('deg_Lipid_metab', Lipid_metab() >> None, k_deg_Lipid_metab)
 
 # LO degradation
@@ -266,12 +250,12 @@ Rule("Xc_Erastin", System_Xc(erastin=None) + Erastin(sys_xc=None) | System_Xc(er
      kf_Xc_Erastin, kr_Xc_Erastin)
 
 # RSL3 + GPX4 <--> RSL3:GPX4
-Parameter("kf_RSL3_GPX4", 0)  # 1
+Parameter("kf_RSL3_GPX4", 1)  # 1
 Parameter("kr_RSL3_GPX4", 100)  # 100
 Rule("RSL3_binds_GPX4", RSL3(gpx4=None) + GPX4(rsl3=None) | RSL3(gpx4=1) % GPX4(rsl3=1), kf_RSL3_GPX4, kr_RSL3_GPX4)
 
 # Ferrostatin-1 + LO. <--> Ferrostatin-1:LO.
-Parameter("kf_Ferrostatin_LO", 0)  # 1
+Parameter("kf_Ferrostatin_LO", 1)  # 1
 Parameter("kr_Ferrostatin_LO", 100)  # 1
 Rule("Ferrostatin_LO", Ferrostatin(lo=None) + LO(ferrostatin=None) | Ferrostatin(lo=1) % LO(ferrostatin=1),
      kf_Ferrostatin_LO, kr_Ferrostatin_LO)
@@ -283,7 +267,7 @@ Rule("Storage_hememetabolism", Iron_storage(iron=None) + Iron(b=None) | Iron_sto
      kf_Storage, kr_Storage)
 
 # Iron Chelators + Iron  <--> Iron Chelators : Iron
-Parameter("kf_Chelators", 0)  # 1
+Parameter("kf_Chelators", 1)  # 1
 Parameter("kr_Chelators", 100)  # 1
 Rule("Chelators_Iron", Iron_chelators(iron=None) + Iron(b=None) | Iron(b=1) % Iron_chelators(iron=1),
      kf_Chelators, kr_Chelators)
