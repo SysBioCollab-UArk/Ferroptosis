@@ -6,11 +6,20 @@ from SIM_PROTOCOLS.sim_protocols import *
 solver = ScipyOdeSimulator(model)
 
 # concentrations in uM
+# HT-1080 cells
+# time_perturb_value = [{0: ("Erastin(sys_xc=None)", 0)},  # control expt
+#                       {0: ("Erastin(sys_xc=None)", 0.056755444)},  # expt 1
+#                       {0: ("Erastin(sys_xc=None)", 0.113703658)},  # expt 2
+#                       {0: ("Erastin(sys_xc=None)", 0.228802973)},  # expt 3
+#                       {0: ("Erastin(sys_xc=None)", 0.455863303)}]  # expt 4
+
+# U2-OS cells
 time_perturb_value = [{0: ("Erastin(sys_xc=None)", 0)},  # control expt
-                      {0: ("Erastin(sys_xc=None)", 0.056755444)},  # expt 1
-                      {0: ("Erastin(sys_xc=None)", 0.113703658)},  # expt 2
-                      {0: ("Erastin(sys_xc=None)", 0.228802973)},  # expt 3
-                      {0: ("Erastin(sys_xc=None)", 0.455863303)}]  # expt 4
+                      {0: ("Erastin(sys_xc=None)", 0.216165686)},  # expt 1
+                      {0: ("Erastin(sys_xc=None)", 0.441596578)},  # expt 2
+                      {0: ("Erastin(sys_xc=None)", 0.896487612)},  # expt 3
+                      {0: ("Erastin(sys_xc=None)", 1.80157234)}]  # expt 4
+
 scale_by_eidx_time = {"GSH_Obs": (0, 300)}  # scale by output at t=300 min in expt 0
 multi_exp_injection = ParallelExperiments(solver, t_equil=1e3, time_perturb_value=time_perturb_value,
                                           scale_by_eidx_time=scale_by_eidx_time)
@@ -24,7 +33,7 @@ no_sample = ["Glu_intra_0", "Cystine_extra_0", "Cys_0", "Glu_Cys_GCL_Product_0",
 
 obs_labels = {'GSH_obs': 'GSH level'}
 
-exp_data_file = os.path.join('DATA', 'ht_1080_gsh.csv')
+exp_data_file = os.path.join('DATA', 'u2_os_gsh.csv')  # 'ht_1080_gsh.csv')
 
 if __name__ == '__main__':
 
