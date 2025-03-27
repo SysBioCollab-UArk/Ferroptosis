@@ -3,6 +3,20 @@ import matplotlib.pyplot as plt
 import os
 import importlib
 
+
+def round_up_nice(x):
+    if x == 0:
+        return 1
+    exponent = np.floor(np.log10(x))
+    fraction = x / 10**exponent
+    nice_fraction = np.select(
+        [fraction <= 1, fraction <= 2, fraction <= 5],
+        [1, 2, 5],
+        default=10
+    )
+    return nice_fraction * 10**exponent
+
+
 # Set the 'path' variable to the directory where the SIM_DATA.csv, run_ferroptosis_pydream.py, and expt data file are
 path = os.path.join('SAVE', 'RESULTS_03_05_25')  # os.getcwd()
 expt_data_file = 'ht_1080_gsh.csv'  # set the expt data filename here
@@ -45,7 +59,7 @@ plt.xlabel('Erastin (μM)', fontsize=16)
 plt.ylabel('GSH level (%)', fontsize=16)
 plt.xticks(fontsize=16)
 plt.yticks(fontsize=16)
-plt.xlim(right=0.5)
+plt.xlim(right=round_up_nice(max(conc_erastin)))
 plt.ylim(bottom=0)
 plt.legend(loc='best')
 
