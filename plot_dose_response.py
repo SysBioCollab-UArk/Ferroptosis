@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import os
 import importlib
 
-
 # Helper function for getting a good x-axis upper limit for dose-response plots
 def round_up_nice(x):
     if x == 0:
@@ -67,7 +66,7 @@ for results_dir in ['HT1080', 'U2OS']:
     plt.errorbar(conc_erastin, avg, yerr=stderr, fmt='o', ms=8, capsize=6, color=p[0].get_color(),
                  label='%s (expt)' % label)
 
-    plt.xlabel('Erastin (μM)', fontsize=16)
+    plt.xlabel(r'Erastin ($\mu$M)', fontsize=16)
     plt.ylabel('GSH level (%)', fontsize=16)
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
@@ -87,7 +86,9 @@ for results_dir in ['HT1080', 'U2OS']:
     ##########
     # Plot parameter histograms
     from param_calibration import *
-
+    from scipy import stats
+    from matplotlib.lines import Line2D
+    from plotting import *
 
     # Helper function for getting the optimal number of columns for the histogram figure
     def get_ncols(ndims):
@@ -116,6 +117,7 @@ for results_dir in ['HT1080', 'U2OS']:
 
     samples_ALL.append(samples)
 
+# Create figure with parameter histograms overlaid
 n_params = len(calibrator.parameter_idxs)
 labels = [calibrator.model.parameters[i].name for i in calibrator.parameter_idxs]
 ncols = get_ncols(n_params)
@@ -134,8 +136,27 @@ for n in range(n_params):
     if n == 0:
         reference_ax = ax
     axes.append(ax)
-    for samples, color in zip(samples_ALL, [colors[n], 'k']):
-        sns.kdeplot(samples[:, n], color=color, fill=True, common_norm=False, ax=ax)
+    for i, (samples, color) in enumerate(zip(samples_ALL, [colors[n], 'k'])):
+        bw_adjust = 3.0 if i == 0 else 2.0
+        sns.kdeplot(samples[:, n], color=color, fill=True, common_norm=False, ax=ax, bw_adjust=bw_adjust)
+        x_vals = sorted(ax.collections[i].get_paths()[0].vertices[:, 0])  # get x-axis values from seaborn plot
+        # get kernel density estimate (KDE) for calculating histogram distance and self distance
+        kde = stats.gaussian_kde(samples[:, n])
+        kde.set_bandwidth(kde.factor * bw_adjust)
+        # TODO: save values of E_Dself and D, so we can plot them in descending order
+        if i == 0:
+            # calculate self distance (expected value)
+            kde_ref = kde
+            x_min_ref = x_vals[0]
+            x_max_ref = x_vals[-1]
+            E_Dself = calc_self_distance(kde_ref, len(samples[:, n]), x_min_ref, x_max_ref, 1000)
+        else:
+            # calculate histogram distance relative to the reference (use 2x the points, just to be safe)
+            D = calc_hist_distance(kde, kde_ref, min(x_vals[0], x_min_ref), max(x_vals[-1], x_max_ref), 2000)
+    empty_handle = Line2D([], [], linestyle="none")
+    legend = ax.legend([empty_handle, empty_handle], ['D: %.3f' % D, r'E[D$^\mathrm{self}$]: %.3f' % E_Dself],
+                       fontsize=0.9*labelsize, loc='best', handlelength=0, labelspacing=0.4)
+    legend.set_frame_on(False)
     ax.set_yticklabels([])
     ax.set_ylabel(None)
     ax.tick_params(axis='x', labelsize=labelsize)
@@ -143,5 +164,13 @@ for n in range(n_params):
     ax.set_title(labels[n], fontsize=labelsize)
 fig.supxlabel(r'log$_{10}$ value', fontsize=fontsize)
 fig.supylabel('Density', fontsize=fontsize)
+
+# Create a common figure legend
+additional_text = {'text': ": HT-1080", 'fontweight': 'normal'}
+write_multicolor_word(fig, 0.82, 0.1, "Multicolor", sns.color_palette(n_colors=len("Multicolor")),
+                      fontsize=fontsize, fontweight='bold', additional_text=additional_text)
+additional_text = {'text': ": U2-OS", 'fontweight': 'normal'}
+write_multicolor_word(fig, 0.82, 0.078, "Black", ['k'] * len("Black"),
+                      fontsize=fontsize, fontweight='bold', additional_text=additional_text)
 
 plt.show()
