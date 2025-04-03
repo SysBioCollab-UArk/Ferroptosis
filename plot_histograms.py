@@ -175,14 +175,16 @@ if __name__ == '__main__':
     sorted_labels = [labels[i] for i in sorted_idxs]
     table_data = []
     for col in range(NCOLS):
-        start = col * n_params // NCOLS  # math.ceil(n_params / NCOLS)
-        end = (col + 1) * n_params // NCOLS  # math.ceil(n_params / NCOLS)  # this could go past the end of the labels array
+        start = col * n_params // NCOLS
+        end = (col + 1) * n_params // NCOLS
         print('start: %d, end: %d, len(sorted_labels): %d' % (start, end, len(sorted_labels)))
         for row in range(end - start):
-            if col == 0:
+            print('row: %d, len(table_data): %d' % (row, len(table_data)))
+            if row == len(table_data):
                 table_data.append([])
-            table_data[row] += [""] if start + row >= len(sorted_labels) \
-                else ["%d. %s" % (start + row, sorted_labels[start + row])]
+            if len(table_data[row]) < col:
+                table_data[row] += [""]
+            table_data[row] += ["%d. %s" % (start + row, sorted_labels[start + row])]
     for row in table_data:
         print(row)
 
