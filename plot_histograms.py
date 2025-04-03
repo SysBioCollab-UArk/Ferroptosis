@@ -77,11 +77,12 @@ def write_multicolor_word(fig, x, y, word, colors, fontsize=10, fontweight='norm
 if __name__ == '__main__':
 
     samples_ALL = []
+    cell_line_dirs = ['HT1080', 'U2OS']
     bw_adjust = [3.0, 2.0]
-    for results_dir, bw_adj in zip(['HT1080', 'U2OS'], bw_adjust):
+    for cell_line_dir, bw_adj in zip(cell_line_dirs, bw_adjust):
 
         # Set the 'path' variable to the directory where the SIM_DATA.csv, run_ferroptosis_pydream.py, and expt data file are
-        path = os.path.join('RESULTS', results_dir)  # os.getcwd()
+        path = os.path.join('RESULTS', cell_line_dir)  # os.getcwd()
 
         # import everything from run_ferroptosis_pydream.py file that's in the path
         run_pydream_file = os.path.join(path, 'run_ferroptosis_pydream.py')
@@ -188,6 +189,9 @@ if __name__ == '__main__':
     for row in table_data:
         print(row)
 
+    # save overlaid histograms figure
+    plt.savefig('fig_PyDREAM_hist_overlay_%s' % str.join('_', cell_line_dirs))
+
     plt.figure(constrained_layout=True)
     plt.bar(np.arange(len(sorted_idxs)), [D[i] for i in sorted_idxs])
     for i, e in enumerate([E_Dself[j] for j in sorted_idxs]):
@@ -208,5 +212,8 @@ if __name__ == '__main__':
     # Remove all borders
     for cell in table.get_celld().values():
         cell.set_linewidth(0)
+
+    # save histogram distances bar plot
+    plt.savefig('fig_PyDREAM_hist_distances_%s' % str.join('_', cell_line_dirs))
 
     plt.show()
