@@ -104,10 +104,11 @@ if __name__ == '__main__':
                                           priors=module.custom_priors,
                                           no_sample=module.no_sample)
 
-        _, samples, _ = calibrator.create_figures(logps_files, samples_files, obs_labels=module.obs_labels,
-                                                  show_plots=True, plot_ll_args={'cutoff': 2},
-                                                  plot_pd_args={'sharex': 'all', 'bw_adjust': bw_adj},
-                                                  which_plots=2)
+        _, samples, _ = calibrator.create_figures(
+            logps_files, samples_files, obs_labels=module.obs_labels, show_plots=True,
+            plot_ll_args={'cutoff': 2, 'save_plot': 'fig_PyDREAM_log_ps_%s' % cell_line_dir},
+            plot_pd_args={'sharex': 'all', 'bw_adjust': bw_adj},
+            which_plots=2)
 
         samples_ALL.append(samples)
 
