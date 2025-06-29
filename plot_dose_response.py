@@ -1,9 +1,9 @@
-from util import plot_drc
+from util import plot_from_simdata
 
 basepath = 'RESULTS'
 directories = ['HT1080', 'U2OS']
 run_pydream_filename = 'run_ferroptosis_pydream.py'
-expts_doses = [
+expt_doses = [
     # experiment 0
     {'ht1080_erastin': [0, 0.056755444, 0.113703658, 0.228802973, 0.455863303],
       'xlabel': r'Erastin ($\mu$M)',
@@ -15,4 +15,4 @@ expts_doses = [
 ]
 label_dict = {'GSH_Obs': 'GSH level', 'ht1080_erastin': None, 'u2os_erastin': None}
 
-plot_drc(basepath, directories, run_pydream_filename, expts_doses, label_dict)
+plot_from_simdata(basepath, directories, run_pydream_filename, expt_doses=expt_doses, label_dict=label_dict)

@@ -8,18 +8,7 @@ from matplotlib.font_manager import FontProperties
 import os
 import importlib
 import math
-
-
-# Helper function for getting the optimal number of columns for the histogram figure
-def get_ncols(ndims):
-    if not isinstance(ndims, int) or ndims <= 0:
-        raise ValueError("'ndims' must be a positive integer")
-    r1 = round(math.sqrt(ndims))  # round() returns an int
-    r2 = math.ceil(math.sqrt(ndims))  # math.ceil() also returns an int
-    while r1 * r2 >= ndims:
-        r1 -= 1
-        r2 += 1
-    return min(r1 + 1, r2 - 1)  # the smaller of the two integers is the # of columns
+from util import get_fig_ncols
 
 
 def calc_self_distance(kde, n_samples, x_min, x_max, num_x_pts):
@@ -114,7 +103,7 @@ if __name__ == '__main__':
 
     # Create figure with parameter histograms overlaid
     n_params = len(calibrator.parameter_idxs)
-    ncols = get_ncols(n_params)
+    ncols = get_fig_ncols(n_params)
     nrows = math.ceil(n_params / ncols)
     fig = plt.figure(constrained_layout=True, figsize=(0.65 * ncols * 6.4, 0.5 * nrows * 4.8))
     #

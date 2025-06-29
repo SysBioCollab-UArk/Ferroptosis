@@ -20,7 +20,7 @@ time_perturb_value = [{0: ("Erastin(sys_xc=None)", 0)},  # control expt
                       {0: ("Erastin(sys_xc=None)", 0.896487612)},  # expt 3
                       {0: ("Erastin(sys_xc=None)", 1.80157234)}]  # expt 4
 
-scale_by_eidx_time = {"GSH_Obs": (0, 300)}  # scale by output at t=300 min in expt 0
+scale_by_eidx_time = {"GSH_Obs": {"eidx": 0, "time": 300}}  # scale by output at t=300 min in expt 0
 multi_exp_injection = ParallelExperiments(solver, t_equil=1e3, time_perturb_value=time_perturb_value,
                                           scale_by_eidx_time=scale_by_eidx_time)
 
